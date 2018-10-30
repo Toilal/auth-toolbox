@@ -84,7 +84,7 @@ export interface ServerEndpoint {
 
 export interface ServerConfiguration {
   loginEndpoint: ServerEndpoint
-  renewEndpoint: ServerEndpoint
+  renewEndpoint?: ServerEndpoint
   logoutEndpoint?: ServerEndpoint
 }
 

@@ -136,11 +136,16 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   }
 
   async renew (): Promise<R> {
-    if (!this.tokens) throw new Error("Token is not available")
+    if (!this.tokens) {
+      throw new Error("Token is not available")
+    }
     if (!this.renewRunning) {
       try {
         this.renewRunning = true
         const serverConfiguration = await this.getServerConfiguration()
+        if (!serverConfiguration.renewEndpoint) {
+          throw new Error("Renew endpoint is not configured")
+        }
         const request = this.serverAdapter.asRenewRequest(serverConfiguration.renewEndpoint, this.tokens)
         const response = await this.clientAdapter.renew(request)
         const tokens = this.serverAdapter.getResponseTokens(response)
