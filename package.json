@@ -116,7 +116,5 @@
     "axios": "^0.18.0",
     "jwt-decode": "^2"
   },
-  "dependencies": {
-    "@types/jwt-decode": "^2.2.1"
-  }
+  "dependencies": {}
 }
