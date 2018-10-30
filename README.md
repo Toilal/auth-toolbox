@@ -26,3 +26,7 @@ Auth Toolbox supports the following protocols out of the box:
  - OpenID Discovery (`.well-known/openid-configuration` endpoint)
 
 Any custom implementation matching OAuth 2.0 Password Grant flow may be implemented.
+
+### Credits
+
+ - TypeScript library template generated from [alexjoverm/typescript-library-starter](https://github.com/alexjoverm/typescript-library-starter).
