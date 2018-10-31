@@ -4,21 +4,25 @@ export default class DefaultTokenStorage implements TokenStorage {
   private storage: Storage
   private accessTokenStorageKey: string
   private refreshTokenStorageKey: string
+  private expiresAtSuffix: string
 
   constructor (storage: Storage,
                accessTokenStorageKey = 'auth.accessToken',
-               refreshTokenStorageKey = 'auth.refreshToken') {
+               refreshTokenStorageKey = 'auth.refreshToken',
+               expiresAtSuffix = '.expiresAt') {
     this.storage = storage
     this.accessTokenStorageKey = accessTokenStorageKey
     this.refreshTokenStorageKey = refreshTokenStorageKey
+    this.expiresAtSuffix = expiresAtSuffix
   }
 
   store (tokens: Tokens): any {
     this.storage.setItem(this.accessTokenStorageKey, tokens.accessToken)
+
     if (tokens.accessTokenExpiresAt) {
-      this.storage.setItem(this.accessTokenStorageKey + '.expiresAt', tokens.accessTokenExpiresAt.getTime().toString(10))
+      this.storage.setItem(this.accessTokenStorageKey + this.expiresAtSuffix, tokens.accessTokenExpiresAt.getTime().toString(10))
     } else {
-      this.storage.removeItem(this.accessTokenStorageKey + '.expiresAt')
+      this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
     }
 
     if (tokens.refreshToken) {
@@ -28,9 +32,9 @@ export default class DefaultTokenStorage implements TokenStorage {
     }
 
     if (tokens.refreshTokenExpiresAt) {
-      this.storage.setItem(this.refreshTokenStorageKey + '.expiresAt', tokens.refreshTokenExpiresAt.getTime().toString(10))
+      this.storage.setItem(this.refreshTokenStorageKey + this.expiresAtSuffix, tokens.refreshTokenExpiresAt.getTime().toString(10))
     } else {
-      this.storage.removeItem(this.refreshTokenStorageKey + '.expiresAt')
+      this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
     }
   }
 
@@ -38,15 +42,15 @@ export default class DefaultTokenStorage implements TokenStorage {
     this.storage.removeItem(this.accessTokenStorageKey)
     this.storage.removeItem(this.refreshTokenStorageKey)
 
-    this.storage.removeItem(this.accessTokenStorageKey + '.expiresAt')
-    this.storage.removeItem(this.refreshTokenStorageKey + '.expiresAt')
+    this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
+    this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
   }
 
   getTokens (): Tokens | undefined {
     const accessTokenStr = this.storage.getItem(this.accessTokenStorageKey)
     const refreshTokenStr = this.storage.getItem(this.refreshTokenStorageKey)
-    const accessTokenExpiresAtStr = this.storage.getItem(this.accessTokenStorageKey + '.expiresAt')
-    const refreshTokenExpiresAtStr = this.storage.getItem(this.refreshTokenStorageKey + '.expiresAt')
+    const accessTokenExpiresAtStr = this.storage.getItem(this.accessTokenStorageKey + this.expiresAtSuffix)
+    const refreshTokenExpiresAtStr = this.storage.getItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
 
     const accessTokenExpiresAt = accessTokenExpiresAtStr ? new Date(parseInt(accessTokenExpiresAtStr, 10)) : undefined
     const refreshTokenExpiresAt = refreshTokenExpiresAtStr ? new Date(parseInt(refreshTokenExpiresAtStr, 10)) : undefined
