@@ -100,9 +100,9 @@ export interface TokenDecoder {
 
   isRefreshTokenExpired (tokens: Tokens): boolean
 
-  decodeAccessToken? (tokens: Tokens): any
+  decodeAccessToken? (tokens: Tokens): object | undefined
 
-  decodeRefreshToken? (tokens: Tokens): any
+  decodeRefreshToken? (tokens: Tokens): object | undefined
 }
 
 export interface AuthListener {

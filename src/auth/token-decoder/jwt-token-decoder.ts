@@ -1,17 +1,21 @@
 import { TokenDecoder, Tokens } from '..'
-import jwtDecode from 'jwt-decode'
 import DefaultTokenDecoder from './default-token-decoder'
+import * as jwtDecode from 'jwt-decode'
+
+interface JwtToken {
+  exp: number
+}
 
 export default class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder {
   constructor (expiredOffset: number = 0) {
     super(expiredOffset)
   }
 
-  decodeAccessToken (tokens: Tokens): any {
+  decodeAccessToken (tokens: Tokens): JwtToken | object {
     return jwtDecode(tokens.accessToken)
   }
 
-  decodeRefreshToken (tokens: Tokens): any {
+  decodeRefreshToken (tokens: Tokens): JwtToken | object | undefined {
     if (!tokens.refreshToken) return
     return jwtDecode(tokens.refreshToken)
   }
@@ -21,9 +25,11 @@ export default class JwtTokenDecoder extends DefaultTokenDecoder implements Toke
       return true
     }
 
-    const now = new Date().getTime() + this.expiredOffset
+    const now = Math.round((new Date().getTime() - this.offset) / 1000)
     const decoded = this.decodeAccessToken(tokens)
-    if (decoded && decoded.exp < now / 1000) {
+    console.log(now)
+    console.log((decoded as any).exp)
+    if ('exp' in decoded && now >= decoded.exp) {
       return true
     }
 
@@ -35,9 +41,9 @@ export default class JwtTokenDecoder extends DefaultTokenDecoder implements Toke
       return true
     }
 
-    const now = new Date().getTime() + this.expiredOffset
+    const now = Math.round((new Date().getTime() - this.offset) / 1000)
     const decoded = this.decodeRefreshToken(tokens)
-    if (decoded && decoded.exp < now / 1000) {
+    if (decoded && 'exp' in decoded && now >= decoded.exp) {
       return true
     }
 

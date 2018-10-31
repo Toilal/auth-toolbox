@@ -45,7 +45,10 @@
     }
   },
   "jest": {
-    "setupFiles": ["jest-localstorage-mock"],
+    "setupFiles": [
+      "jest-localstorage-mock",
+      "jest-date-mock"
+    ],
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
@@ -83,8 +86,8 @@
     "@commitlint/cli": "^7.1.2",
     "@commitlint/config-conventional": "^7.1.2",
     "@types/jest": "^23.3.2",
-    "@types/node": "^10.11.0",
     "@types/jwt-decode": "^2.2.1",
+    "@types/node": "^10.11.0",
     "axios": "^0.18.0",
     "colors": "^1.3.2",
     "commitizen": "^2.10.1",
@@ -94,6 +97,7 @@
     "husky": "^1.0.1",
     "jest": "^23.6.0",
     "jest-config": "^23.6.0",
+    "jest-date-mock": "^1.0.5",
     "jest-localstorage-mock": "^2.3.0",
     "jwt-decode": "^2",
     "lint-staged": "^7.3.0",
