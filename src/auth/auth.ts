@@ -7,7 +7,9 @@ import {
   Tokens,
   TokenStorage
 } from '.'
+
 import DefaultTokenDecoder from './token-decoder/default-token-decoder'
+import DefaultTokenStorage from './token-storage/default-token-storage'
 
 export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   serverAdapter: ServerAdapter<C>
@@ -30,8 +32,8 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
                serverAdapter: ServerAdapter<C>,
                clientAdapter: ClientAdapter<C, Q, R>,
                tokenDecoder: TokenDecoder = new DefaultTokenDecoder(),
-               tokenStorage?: TokenStorage,
-               persistentTokenStorage?: TokenStorage) {
+               tokenStorage: TokenStorage = new DefaultTokenStorage(sessionStorage),
+               persistentTokenStorage: TokenStorage = new DefaultTokenStorage(localStorage)) {
     this.serverConfiguration = serverConfiguration
     this.serverAdapter = serverAdapter
     this.clientAdapter = clientAdapter
