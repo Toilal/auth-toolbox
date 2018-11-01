@@ -57,23 +57,9 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
     if (!this.requestInterceptor) {
       this.requestInterceptor = this.axios.interceptors.request.use(async (config) => {
         const request = this.asRequest(config)
-        const tokens = auth.getTokens()
-        let accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
-        let refreshToken = (tokens && tokens.refreshToken) ? tokens.refreshToken : undefined
-        const isLoginRequest = await auth.isLoginRequest(request)
-        if (tokens && accessToken && !isLoginRequest) {
-          const isRenewRequest = await auth.isRenewRequest(request)
-          if (refreshToken && this.tokenDecoder && !isRenewRequest && this.tokenDecoder.isAccessTokenExpired(tokens)) {
-            try {
-              await auth.renew()
-            } catch (err) {
-              auth.expired()
-              throw err
-            }
-            const tokens = auth.getTokens()
-            accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
-          }
-          auth.serverAdapter.setAccessToken(request, accessToken)
+
+        const intercepted = await auth.interceptRequest(request)
+        if (intercepted) {
           config.data = request.data
           config.headers = request.headers
         }
@@ -83,32 +69,17 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
 
     if (!this.responseInterceptor) {
       this.responseInterceptor = this.axios.interceptors.response.use((response: AxiosResponse) => response, async (error: AxiosError) => {
-        const tokens = auth.getTokens()
-        const refreshToken = tokens && tokens.refreshToken ? tokens.refreshToken : undefined
-        if (!error.response || !refreshToken) {
+        if (!error.response) {
           throw error
         }
 
-        let response = this.asResponse(error.response)
-        let request = this.asRequest(error.config)
+        const request = this.asRequest(error.config)
+        const response = this.asResponse(error.response)
 
-        const isRenewRequest = await auth.isRenewRequest(request)
-        if (!error.response.config || !isRenewRequest &&
-          auth.serverAdapter.accessTokenHasExpired(request, response)) {
-          // access token has expired
-
-          try {
-            await auth.renew()
-            error.config.baseURL = undefined // Workaround
-            const response = await this.axios.request(error.config)
-            return response
-          } catch (err) {
-            auth.expired()
-            throw err
-          }
-        } else if (error.response && isRenewRequest &&
-          auth.serverAdapter.refreshTokenHasExpired(request, response)) {
-          auth.expired()
+        const intercepted = await auth.interceptErrorResponse(request, response)
+        if (intercepted) {
+          error.config.baseURL = undefined // Workaround
+          return this.axios.request(error.config)
         }
 
         throw error

@@ -34,6 +34,10 @@ export interface IAuthInternals<C, Q, R> extends IAuth<C, R> {
   isLoginRequest (request: Request): boolean | Promise<boolean>
 
   isRenewRequest (request: Request): boolean | Promise<boolean>
+
+  interceptRequest (request: Request): boolean | Promise<boolean>
+
+  interceptErrorResponse (request: Request, response: Response): boolean | Promise<boolean>
 }
 
 export interface Request extends ServerEndpoint {

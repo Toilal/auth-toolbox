@@ -1,17 +1,19 @@
 import {
   AuthListener,
   ClientAdapter,
-  IAuthInternals, Request,
+  IAuthInternals, Request, Response,
   ServerAdapter,
-  ServerConfiguration,
+  ServerConfiguration, TokenDecoder,
   Tokens,
   TokenStorage
 } from '.'
+import DefaultTokenDecoder from './token-decoder/default-token-decoder'
 
 export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   serverAdapter: ServerAdapter<C>
   serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
   clientAdapter: ClientAdapter<C, Q, R>
+  tokenDecoder?: TokenDecoder
   tokenStorage?: TokenStorage
   persistentTokenStorage?: TokenStorage
   listeners: AuthListener[] = []
@@ -23,14 +25,17 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   private renewPromises: { promise: Promise<any>, resolve: any, reject: any }[] = []
   private _serverConfiguration: any
 
+
   constructor (serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
                serverAdapter: ServerAdapter<C>,
                clientAdapter: ClientAdapter<C, Q, R>,
+               tokenDecoder: TokenDecoder = new DefaultTokenDecoder(),
                tokenStorage?: TokenStorage,
                persistentTokenStorage?: TokenStorage) {
     this.serverConfiguration = serverConfiguration
     this.serverAdapter = serverAdapter
     this.clientAdapter = clientAdapter
+    this.tokenDecoder = tokenDecoder
     this.tokenStorage = tokenStorage
     this.persistentTokenStorage = persistentTokenStorage
   }
@@ -216,5 +221,55 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
     }
     this.tokens = tokens
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
+  }
+
+  async interceptRequest(request: Request) {
+    const tokens = this.getTokens()
+    let accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
+    let refreshToken = (tokens && tokens.refreshToken) ? tokens.refreshToken : undefined
+    const isLoginRequest = await this.isLoginRequest(request)
+    if (tokens && accessToken && !isLoginRequest) {
+      const isRenewRequest = await this.isRenewRequest(request)
+      if (refreshToken && !isRenewRequest && this.tokenDecoder && this.tokenDecoder.isAccessTokenExpired(tokens)) {
+        try {
+          await this.renew()
+        } catch (err) {
+          await this.expired()
+          throw err
+        }
+        const tokens = this.getTokens()
+        accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
+      }
+      this.serverAdapter.setAccessToken(request, accessToken)
+      return true;
+    }
+    return false
+  }
+
+  async interceptErrorResponse (request: Request, response: Response) {
+      const tokens = this.getTokens()
+      const refreshToken = tokens && tokens.refreshToken ? tokens.refreshToken : undefined
+
+      if (!refreshToken) {
+        return false
+      }
+
+      const isRenewRequest = await this.isRenewRequest(request)
+      if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
+        // access token has expired
+
+        try {
+          await this.renew()
+          return true
+        } catch (err) {
+          await this.expired()
+          return false
+        }
+      } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
+        await this.expired()
+        return false
+      }
+
+      return false
   }
 }
