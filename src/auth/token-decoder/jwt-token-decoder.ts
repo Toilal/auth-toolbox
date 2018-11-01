@@ -1,4 +1,4 @@
-import { TokenDecoder, Tokens } from '..'
+import { Token, TokenDecoder } from '..'
 import DefaultTokenDecoder from './default-token-decoder'
 import * as jwtDecode from 'jwt-decode'
 
@@ -11,39 +11,18 @@ export default class JwtTokenDecoder extends DefaultTokenDecoder implements Toke
     super(expiredOffset)
   }
 
-  decodeAccessToken (tokens: Tokens): JwtToken | object {
-    return jwtDecode(tokens.accessToken)
+  decode (token: Token): JwtToken | object {
+    return jwtDecode(token.value)
   }
 
-  decodeRefreshToken (tokens: Tokens): JwtToken | object | undefined {
-    if (!tokens.refreshToken) return
-    return jwtDecode(tokens.refreshToken)
-  }
-
-  isAccessTokenExpired (tokens: Tokens): boolean {
-    if (super.isAccessTokenExpired(tokens)) {
+  isExpired (token: Token): boolean {
+    if (super.isExpired(token)) {
       return true
     }
 
     const now = Math.round((new Date().getTime() - this.offset) / 1000)
-    const decoded = this.decodeAccessToken(tokens)
-    console.log(now)
-    console.log((decoded as any).exp)
+    const decoded = this.decode(token)
     if ('exp' in decoded && now >= decoded.exp) {
-      return true
-    }
-
-    return false
-  }
-
-  isRefreshTokenExpired (tokens: Tokens): boolean {
-    if (super.isRefreshTokenExpired(tokens)) {
-      return true
-    }
-
-    const now = Math.round((new Date().getTime() - this.offset) / 1000)
-    const decoded = this.decodeRefreshToken(tokens)
-    if (decoded && 'exp' in decoded && now >= decoded.exp) {
       return true
     }
 

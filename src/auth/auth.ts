@@ -85,11 +85,11 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   }
 
   get accessToken (): string | undefined {
-    return this.tokens ? this.tokens.accessToken : undefined
+    return this.tokens && this.tokens.access ? this.tokens.access.value : undefined
   }
 
   get refreshToken (): string | undefined {
-    return this.tokens ? this.tokens.refreshToken : undefined
+    return this.tokens && this.tokens.refresh ? this.tokens.refresh.value : undefined
   }
 
   isSaveCredentials (): boolean {
@@ -227,12 +227,12 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
 
   async interceptRequest(request: Request) {
     const tokens = this.getTokens()
-    let accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
-    let refreshToken = (tokens && tokens.refreshToken) ? tokens.refreshToken : undefined
+    let accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
+    let refreshToken = (tokens && tokens.refresh) ? tokens.refresh.value : undefined
     const isLoginRequest = await this.isLoginRequest(request)
     if (tokens && accessToken && !isLoginRequest) {
       const isRenewRequest = await this.isRenewRequest(request)
-      if (refreshToken && !isRenewRequest && this.tokenDecoder && this.tokenDecoder.isAccessTokenExpired(tokens)) {
+      if (refreshToken && !isRenewRequest && this.tokenDecoder && this.tokenDecoder.isExpired(tokens.access)) {
         try {
           await this.renew()
         } catch (err) {
@@ -240,7 +240,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
           throw err
         }
         const tokens = this.getTokens()
-        accessToken = (tokens && tokens.accessToken) ? tokens.accessToken : undefined
+        accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
       }
       this.serverAdapter.setAccessToken(request, accessToken)
       return true;
@@ -250,7 +250,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
 
   async interceptErrorResponse (request: Request, response: Response) {
       const tokens = this.getTokens()
-      const refreshToken = tokens && tokens.refreshToken ? tokens.refreshToken : undefined
+      const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
 
       if (!refreshToken) {
         return false
@@ -258,8 +258,6 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
 
       const isRenewRequest = await this.isRenewRequest(request)
       if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
-        // access token has expired
-
         try {
           await this.renew()
           return true

@@ -1,4 +1,4 @@
-import { TokenDecoder, Tokens } from '..'
+import { Token, TokenDecoder } from '..'
 
 export default class DefaultTokenDecoder implements TokenDecoder {
   protected offset: number
@@ -7,20 +7,10 @@ export default class DefaultTokenDecoder implements TokenDecoder {
     this.offset = offsetSeconds * 1000
   }
 
-  isAccessTokenExpired (tokens: Tokens): boolean {
-    if (tokens.accessTokenExpiresAt) {
+  isExpired (token: Token): boolean {
+    if (token.expiresAt) {
       const now = new Date().getTime() - this.offset
-      if (now >= tokens.accessTokenExpiresAt.getTime()) {
-        return true
-      }
-    }
-    return false
-  }
-
-  isRefreshTokenExpired (tokens: Tokens): boolean {
-    if (tokens.refreshTokenExpiresAt) {
-      const now = new Date().getTime() - this.offset
-      if (now >= tokens.refreshTokenExpiresAt.getTime()) {
+      if (now >= token.expiresAt.getTime()) {
         return true
       }
     }

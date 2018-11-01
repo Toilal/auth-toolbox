@@ -1,11 +1,10 @@
 import JwtTokenDecoder from '../../../src/auth/token-decoder/jwt-token-decoder'
-import { Tokens } from '../../../src/auth'
+import { Token } from '../../../src/auth'
 
 import { advanceTo, clear } from 'jest-date-mock'
 
 describe('Jwt Token Decoder', () => {
   const accessToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
-  const refreshToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCIsInJlZnJlc2giOiJ0cnVlIn0.TlkC9Ga4c3w8Z2LsyQ4sLPbtq1jm78PwXGbfuimpFAg'
 
   const accessTokenExpNow = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
   const accessTokenExpNowMinus1 = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MCwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.5qqM6z2xTN_DqFCJYJeRxFlbMKJ0AyIrudGqvHCke3g'
@@ -28,164 +27,62 @@ describe('Jwt Token Decoder', () => {
     expect(JwtTokenDecoder).toBeDefined()
   })
 
-  it('decode accessToken', () => {
-    const tokens: Tokens = {
-      accessToken
-    }
+  it('decode token', () => {
+    const token: Token = { value: accessToken }
 
     const tokenDecoder = new JwtTokenDecoder()
-    const decoded = tokenDecoder.decodeAccessToken(tokens)
+    const decoded = tokenDecoder.decode(token)
     expect(decoded).toEqual({
-        'iss': 'Jwt Toolbox',
-        'iat': 133713311,
-        'exp': 133713371,
-        'aud': 'jwt-toolbox',
-        'sub': 'jwt-toolbox'
-      })
+      'iss': 'Jwt Toolbox',
+      'iat': 133713311,
+      'exp': 133713371,
+      'aud': 'jwt-toolbox',
+      'sub': 'jwt-toolbox'
+    })
   })
 
-  it('decode refreshToken', () => {
-    const tokens: Tokens = {
-      accessToken,
-      refreshToken
-    }
-
-    const tokenDecoder = new JwtTokenDecoder()
-    const decoded = tokenDecoder.decodeRefreshToken(tokens)
-    expect(decoded).toEqual({
-        'iss': 'Jwt Toolbox',
-        'iat': 133713311,
-        'exp': 133713371,
-        'aud': 'jwt-toolbox',
-        'sub': 'jwt-toolbox',
-        'refresh': 'true'
-      })
-  })
-
-  it('check accessToken is expired', () => {
-    const tokens: Tokens = {
-      accessToken: accessTokenExpNow
-    }
+  it('check token is expired', () => {
+    const token: Token = { value: accessTokenExpNow }
 
     const tokenDecoder = new JwtTokenDecoder()
 
-    const accessTokenExpired = tokenDecoder.isAccessTokenExpired(tokens)
+    const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeTruthy()
   })
 
-  it('check accessToken is expired when 1 second after expiration', () => {
-    const tokens: Tokens = {
-      accessToken: accessTokenExpNowMinus1
-    }
+  it('check token is expired when 1 second after expiration', () => {
+    const token: Token = { value: accessTokenExpNowMinus1 }
 
     const tokenDecoder = new JwtTokenDecoder()
 
-    const accessTokenExpired = tokenDecoder.isAccessTokenExpired(tokens)
+    const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeTruthy()
   })
 
-  it('check accessToken is not expired when 1 second before expiration', () => {
-    const tokens: Tokens = {
-      accessToken: accessTokenExpNowPlus1
-    }
+  it('check token is not expired when 1 second before expiration', () => {
+    const token: Token = { value: accessTokenExpNowPlus1 }
 
     const tokenDecoder = new JwtTokenDecoder()
 
-    const accessTokenExpired = tokenDecoder.isAccessTokenExpired(tokens)
+    const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeFalsy()
   })
 
-  it('check accessToken is not expired with offset', () => {
-    const tokens: Tokens = {
-      accessToken: accessTokenExpNowMinus9
-    }
+  it('check token is not expired with offset', () => {
+    const token: Token = { value: accessTokenExpNowMinus9 }
 
     const tokenDecoder = new JwtTokenDecoder(10)
 
-    const accessTokenExpired = tokenDecoder.isAccessTokenExpired(tokens)
+    const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeFalsy()
   })
 
-  it('check accessToken is expired with offset', () => {
-    const tokens: Tokens = {
-      accessToken: accessTokenExpNowMinus10
-    }
+  it('check token is expired with offset', () => {
+    const token: Token = { value: accessTokenExpNowMinus10 }
 
     const tokenDecoder = new JwtTokenDecoder(10)
 
-    const accessTokenExpired = tokenDecoder.isAccessTokenExpired(tokens)
+    const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeTruthy()
-  })
-
-  it('check refreshToken is expired with offset', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNowMinus10,
-    }
-
-    const tokenDecoder = new JwtTokenDecoder(10)
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeTruthy()
-  })
-
-  it('check refreshToken is expired', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNow
-    }
-
-    const tokenDecoder = new JwtTokenDecoder()
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeTruthy()
-  })
-
-  it('check refreshToken is expired', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNowMinus1
-    }
-
-    const tokenDecoder = new JwtTokenDecoder()
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeTruthy()
-  })
-
-  it('check refreshToken is not expired', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNowPlus1
-    }
-
-    const tokenDecoder = new JwtTokenDecoder()
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeFalsy()
-  })
-
-  it('check refreshToken is not expired with offset', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNowMinus9
-    }
-
-    const tokenDecoder = new JwtTokenDecoder(10)
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeFalsy()
-  })
-
-  it('check refreshToken is expired with offset', () => {
-    const tokens: Tokens = {
-      accessToken: '',
-      refreshToken: accessTokenExpNowMinus10
-    }
-
-    const tokenDecoder = new JwtTokenDecoder(10)
-
-    const refreshTokenExpired = tokenDecoder.isRefreshTokenExpired(tokens)
-    expect(refreshTokenExpired).toBeTruthy()
   })
 })

@@ -92,21 +92,19 @@ export interface ServerConfiguration {
   logoutEndpoint?: ServerEndpoint
 }
 
+export interface Token {
+  value: string,
+  expiresAt?: Date,
+}
+
 export interface Tokens {
-  accessToken: string,
-  accessTokenExpiresAt?: Date,
-  refreshToken?: string
-  refreshTokenExpiresAt?: Date,
+  access: Token
+  refresh?: Token
 }
 
 export interface TokenDecoder {
-  isAccessTokenExpired (tokens: Tokens): boolean
-
-  isRefreshTokenExpired (tokens: Tokens): boolean
-
-  decodeAccessToken? (tokens: Tokens): object | undefined
-
-  decodeRefreshToken? (tokens: Tokens): object | undefined
+  isExpired (token: Token): boolean
+  decode? (token: Token): object | undefined
 }
 
 export interface AuthListener {

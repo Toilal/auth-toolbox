@@ -3,7 +3,7 @@ import OpenidConnectAdapter, {
   openidConnectDiscovery
 } from '../../../src/auth/server-adapter/openid-connect-adapter'
 
-import AxiosAdapter from '../../../src/auth/client-adapter/axios-adapter'
+import AxiosAdapterTest from '../../../src/auth/client-adapter/axios-adapter'
 import axios from 'axios'
 
 import { advanceTo, clear } from 'jest-date-mock'
@@ -25,7 +25,7 @@ describe('Openid Connect Adapter - Discovery', () => {
       end_session_endpoint: 'endSessionEndpoint'
     })
 
-    const axiosAdapter = new AxiosAdapter(axiosInstance)
+    const axiosAdapter = new AxiosAdapterTest(axiosInstance)
     const configuration = await openidConnectDiscovery(axiosAdapter, 'issuer')
 
     expect(configuration.loginEndpoint).toEqual({ method: 'POST', url: 'tokenEndpoint' })
@@ -71,14 +71,14 @@ describe('Openid Connect Adapter', () => {
     const method = 'POST'
     const url = 'url'
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const accessToken = 'testAccessToken'
-    const refreshToken = 'testRefreshToken'
+    const access = { value: 'testAccessToken' }
+    const refresh = { value: 'testRefreshToken' }
 
-    const loginRequest = adapter.asLogoutRequest({ url, method }, { accessToken, refreshToken })
+    const loginRequest = adapter.asLogoutRequest({ url, method }, { access, refresh })
     expect(loginRequest.method).toBe(method)
     expect(loginRequest.url).toBe(url)
     expect(loginRequest.headers).toEqual(headers)
-    expect(loginRequest.data).toBe(`refresh_token=${refreshToken}`)
+    expect(loginRequest.data).toBe(`refresh_token=${refresh.value}`)
   })
 
   it('adapts renew request', () => {
@@ -87,14 +87,14 @@ describe('Openid Connect Adapter', () => {
     const method = 'POST'
     const url = 'url'
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const accessToken = 'testAccessToken'
-    const refreshToken = 'testRefreshToken'
+    const access = { value: 'testAccessToken' }
+    const refresh = { value: 'testRefreshToken' }
 
-    const loginRequest = adapter.asRenewRequest({ url, method }, { accessToken, refreshToken })
+    const loginRequest = adapter.asRenewRequest({ url, method }, { access, refresh })
     expect(loginRequest.method).toBe(method)
     expect(loginRequest.url).toBe(url)
     expect(loginRequest.headers).toEqual(headers)
-    expect(loginRequest.data).toBe(`grant_type=refresh_token&refresh_token=${refreshToken}`)
+    expect(loginRequest.data).toBe(`grant_type=refresh_token&refresh_token=${refresh.value}`)
   })
 
   it('retrieves tokens from response without expires', () => {
@@ -109,10 +109,11 @@ describe('Openid Connect Adapter', () => {
 
     const tokens = adapter.getResponseTokens(response)
 
-    expect(tokens.accessToken).toBe(response.data.access_token)
-    expect(tokens.refreshToken).toBe(response.data.refresh_token)
-    expect(tokens.accessTokenExpiresAt).toBeUndefined()
-    expect(tokens.refreshTokenExpiresAt).toBeUndefined()
+    expect(tokens.access).toEqual({ value: response.data.access_token })
+    expect(tokens.refresh).toBeDefined()
+    if (tokens.refresh) {
+      expect(tokens.refresh).toEqual({ value: response.data.refresh_token })
+    }
   })
 
   it('retrieves tokens from response with expires', () => {
@@ -135,10 +136,11 @@ describe('Openid Connect Adapter', () => {
     expiresAt.setSeconds(expiresAt.getSeconds() + response.data.expires_in)
     refreshExpiresAt.setSeconds(refreshExpiresAt.getSeconds() + response.data.refresh_expires_in)
 
-    expect(tokens.accessToken).toBe(response.data.access_token)
-    expect(tokens.refreshToken).toBe(response.data.refresh_token)
-    expect(tokens.accessTokenExpiresAt).toEqual(expiresAt)
-    expect(tokens.refreshTokenExpiresAt).toEqual(refreshExpiresAt)
+    expect(tokens.access).toEqual({ value: response.data.access_token, expiresAt })
+    expect(tokens.refresh).toBeDefined()
+    if (tokens.refresh) {
+      expect(tokens.refresh).toEqual({ value: response.data.refresh_token, expiresAt: refreshExpiresAt })
+    }
   })
 
   it('set access token on request', () => {

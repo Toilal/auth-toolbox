@@ -17,22 +17,22 @@ export default class DefaultTokenStorage implements TokenStorage {
   }
 
   store (tokens: Tokens): any {
-    this.storage.setItem(this.accessTokenStorageKey, tokens.accessToken)
+    this.storage.setItem(this.accessTokenStorageKey, tokens.access.value)
 
-    if (tokens.accessTokenExpiresAt) {
-      this.storage.setItem(this.accessTokenStorageKey + this.expiresAtSuffix, tokens.accessTokenExpiresAt.getTime().toString(10))
+    if (tokens.access.expiresAt) {
+      this.storage.setItem(this.accessTokenStorageKey + this.expiresAtSuffix, tokens.access.expiresAt.getTime().toString(10))
     } else {
       this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
     }
 
-    if (tokens.refreshToken) {
-      this.storage.setItem(this.refreshTokenStorageKey, tokens.refreshToken)
+    if (tokens.refresh) {
+      this.storage.setItem(this.refreshTokenStorageKey, tokens.refresh.value)
     } else {
       this.storage.removeItem(this.refreshTokenStorageKey)
     }
 
-    if (tokens.refreshTokenExpiresAt) {
-      this.storage.setItem(this.refreshTokenStorageKey + this.expiresAtSuffix, tokens.refreshTokenExpiresAt.getTime().toString(10))
+    if (tokens.refresh && tokens.refresh.expiresAt) {
+      this.storage.setItem(this.refreshTokenStorageKey + this.expiresAtSuffix, tokens.refresh.expiresAt.getTime().toString(10))
     } else {
       this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
     }
@@ -59,7 +59,11 @@ export default class DefaultTokenStorage implements TokenStorage {
     const refreshToken = refreshTokenStr ? refreshTokenStr : undefined
 
     if (accessToken) {
-      return { accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt }
+      const tokens: Tokens = { access: { value: accessToken, expiresAt: accessTokenExpiresAt } }
+      if (refreshToken) {
+        tokens.refresh = { value: refreshToken, expiresAt: refreshTokenExpiresAt }
+      }
+      return tokens
     }
   }
 }

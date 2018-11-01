@@ -48,8 +48,12 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
   }
 
   asLogoutRequest (logoutEndpoint: ServerEndpoint, tokens: Tokens): Request {
+    if (!tokens.refresh) {
+      throw new Error('Refresh token is not defined')
+    }
+
     const rawData = {
-      'refresh_token': tokens.refreshToken
+      'refresh_token': tokens.refresh.value
     }
 
     const data = Querystring.stringify(rawData)
@@ -59,9 +63,13 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
   }
 
   asRenewRequest (renewEndpoint: ServerEndpoint, tokens: Tokens): Request {
+    if (!tokens.refresh) {
+      throw new Error('Refresh token is not defined')
+    }
+
     const rawData = {
       'grant_type': 'refresh_token',
-      'refresh_token': tokens.refreshToken
+      'refresh_token': tokens.refresh.value
     }
 
     const data = Querystring.stringify(rawData)
@@ -73,24 +81,31 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
   getResponseTokens (response: Response): Tokens {
     const loginResponse: LoginResponse = response.data
 
-    let accessTokenExpiresAt: Date | undefined = undefined
+    if (!loginResponse.access_token) {
+      throw new Error('No access token found in response')
+    }
+
+    const tokens: Tokens = {
+      access: { value: loginResponse.access_token }
+    }
+
     if (loginResponse.expires_in) {
-      accessTokenExpiresAt = new Date()
-      accessTokenExpiresAt.setSeconds(accessTokenExpiresAt.getSeconds() + loginResponse.expires_in)
+      const expiresAt = new Date()
+      expiresAt.setSeconds(expiresAt.getSeconds() + loginResponse.expires_in)
+      tokens.access.expiresAt = expiresAt
     }
 
-    let refreshTokenExpiresAt: Date | undefined = undefined
-    if (loginResponse.refresh_expires_in) {
-      refreshTokenExpiresAt = new Date()
-      refreshTokenExpiresAt.setSeconds(refreshTokenExpiresAt.getSeconds() + loginResponse.refresh_expires_in)
+    if (loginResponse.refresh_token) {
+      tokens.refresh = { value: loginResponse.refresh_token }
+
+      if (loginResponse.refresh_expires_in) {
+        const expiresAt = new Date()
+        expiresAt.setSeconds(expiresAt.getSeconds() + loginResponse.refresh_expires_in)
+        tokens.refresh.expiresAt = expiresAt
+      }
     }
 
-    return {
-      accessToken: loginResponse.access_token,
-      accessTokenExpiresAt,
-      refreshToken: loginResponse.refresh_token,
-      refreshTokenExpiresAt
-    }
+    return tokens
   }
 
   setAccessToken (request: Request, accessToken: string): void {
