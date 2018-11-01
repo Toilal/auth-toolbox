@@ -1,39 +1,36 @@
-import { ClientAdapter, IAuthInternals, Request, Response, TokenDecoder, UsernamePasswordCredentials } from '..'
-import { AxiosBasicCredentials, AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import DefaultTokenDecoder from '../token-decoder/default-token-decoder'
+import { ClientAdapter, IAuthInternals, Request, Response, UsernamePasswordCredentials } from '..'
+import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCredentials, AxiosRequestConfig, AxiosResponse> {
   private axios: AxiosInstance
-  private auth?: AxiosBasicCredentials
+  private config: AxiosRequestConfig
 
   private requestInterceptor?: number
   private responseInterceptor?: number
-  private tokenDecoder: TokenDecoder
 
-  constructor (axios: AxiosInstance, auth?: AxiosBasicCredentials, tokenDecoder: TokenDecoder = new DefaultTokenDecoder()) {
+  constructor (axios: AxiosInstance, config: AxiosRequestConfig = {}) {
     this.axios = axios
-    this.auth = auth
-    this.tokenDecoder = tokenDecoder
+    this.config = config
   }
 
   login (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
-      ...request,
-      auth: this.auth
+      ...this.config,
+      ...request
     })
   }
 
   logout (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
-      ...request,
-      auth: this.auth
+      ...this.config,
+      ...request
     })
   }
 
   renew (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
-      ...request,
-      auth: this.auth
+      ...this.config,
+      ...request
     })
   }
 
