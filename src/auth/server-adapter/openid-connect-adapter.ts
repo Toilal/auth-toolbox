@@ -3,7 +3,6 @@ import {
   Request,
   Response,
   ServerAdapter,
-  ServerConfiguration,
   ServerEndpoint,
   Tokens,
   UsernamePasswordCredentials
@@ -23,19 +22,16 @@ export interface OpenidConfiguration {
   end_session_endpoint: string
 }
 
-export const openidConnectDiscovery = <C, Q, R> (client: ClientAdapter<C, Q, R>, issuerUrl: string) => new Promise<ServerConfiguration>((resolve, reject) => {
-  return client.request({ method: 'GET', url: issuerUrl + '/.well-known/openid-configuration' }).then((r) => {
-    const response = client.asResponse(r)
-    const openidConfiguration: OpenidConfiguration = response.data
-    let serverConfiguration: ServerConfiguration = {
-      loginEndpoint: { method: 'POST', url: openidConfiguration.token_endpoint },
-      renewEndpoint: { method: 'POST', url: openidConfiguration.token_endpoint },
-      logoutEndpoint: { method: 'POST', url: openidConfiguration.end_session_endpoint }
-    }
-    resolve(serverConfiguration)
-    return serverConfiguration
-  })
-})
+export const openidConnectDiscovery = async <C, Q, R> (client: ClientAdapter<C, Q, R>, issuerUrl: string) => {
+  const clientResponse = await client.request({ method: 'GET', url: issuerUrl + '/.well-known/openid-configuration' })
+  const response = client.asResponse(clientResponse)
+  const openidConfiguration: OpenidConfiguration = response.data
+  return {
+    loginEndpoint: { method: 'POST', url: openidConfiguration.token_endpoint },
+    renewEndpoint: { method: 'POST', url: openidConfiguration.token_endpoint },
+    logoutEndpoint: { method: 'POST', url: openidConfiguration.end_session_endpoint }
+  }
+}
 
 export default class OpenidConnectAdapter implements ServerAdapter<UsernamePasswordCredentials> {
   asLoginRequest (loginEndpoint: ServerEndpoint, credentials: UsernamePasswordCredentials): Request {
