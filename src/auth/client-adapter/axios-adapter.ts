@@ -1,3 +1,4 @@
+import { AsRequestError } from '.'
 import { ClientAdapter, IAuthInternals, Request, Response, UsernamePasswordCredentials } from '..'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
@@ -41,13 +42,30 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
   }
 
   asResponse (response: AxiosResponse): Response {
-    return { data: response.data, headers: response.headers, status: response.status }
+    const r: Response = {}
+    if (response.data) {
+      r.data = response.data
+    }
+    if (response.headers) {
+      r.headers = response.headers
+    }
+    if (response.status) {
+      r.status = response.status
+    }
+    return r
   }
 
   asRequest (request: AxiosRequestConfig): Request {
-    if (!request.url) throw new Error('No url is defined')
-    if (!request.method) throw new Error('no method is defined')
-    return { url: request.url, method: request.method, data: request.data, headers: request.headers }
+    if (!request.url) throw new AsRequestError('No url is defined')
+    if (!request.method) throw new AsRequestError('No method is defined')
+    const r: Request = { url: request.url, method: request.method }
+    if (request.data) {
+      r.data = request.data
+    }
+    if (request.headers) {
+      r.headers = request.headers
+    }
+    return r
   }
 
   init (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
@@ -66,17 +84,15 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
 
     if (!this.responseInterceptor) {
       this.responseInterceptor = this.axios.interceptors.response.use((response: AxiosResponse) => response, async (error: AxiosError) => {
-        if (!error.response) {
-          throw error
-        }
+        if (error.response) {
+          const request = this.asRequest(error.config)
+          const response = this.asResponse(error.response)
 
-        const request = this.asRequest(error.config)
-        const response = this.asResponse(error.response)
-
-        const intercepted = await auth.interceptErrorResponse(request, response)
-        if (intercepted) {
-          error.config.baseURL = undefined // Workaround
-          return this.axios.request(error.config)
+          const intercepted = await auth.interceptErrorResponse(request, response)
+          if (intercepted) {
+            error.config.baseURL = undefined // Workaround
+            return this.axios.request(error.config)
+          }
         }
 
         throw error
