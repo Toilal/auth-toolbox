@@ -31,6 +31,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   private renewPromises: { promise: Promise<any>, resolve: any, reject: any }[] = []
   private _serverConfiguration: any
 
+  private _initialized: boolean = false
 
   constructor (serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
                serverAdapter: ServerAdapter<C>,
@@ -47,47 +48,55 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   }
 
   async init () {
-    if (this.tokenStorage) {
-      let tokens = await this.tokenStorage.getTokens()
-      if (this.persistentTokenStorage) {
-        let persistentTokens = await this.persistentTokenStorage.getTokens()
-        if (persistentTokens) {
-          this.saveCredentials = true
+    if (!this._initialized) {
+      if (this.tokenStorage) {
+        let tokens = await this.tokenStorage.getTokens()
+        if (this.persistentTokenStorage) {
+          let persistentTokens = await this.persistentTokenStorage.getTokens()
+          if (persistentTokens) {
+            this.saveCredentials = true
+          }
+
+          if (!tokens) {
+            tokens = persistentTokens
+          }
+
+          if (!tokens) {
+            await this.persistentTokenStorage.clear()
+          } else {
+            await this.persistentTokenStorage.store(tokens)
+          }
         }
 
         if (!tokens) {
-          tokens = persistentTokens
-        }
-
-        if (!tokens) {
-          await this.persistentTokenStorage.clear()
+          await this.unsetTokens()
         } else {
-          await this.persistentTokenStorage.store(tokens)
+          await this.setTokens(tokens)
         }
       }
 
-      if (!tokens) {
-        await this.unsetTokens()
-      } else {
-        await this.setTokens(tokens)
-      }
+      const serverConfiguration = await this.serverConfiguration
+      this._serverConfiguration = serverConfiguration
+
+      this.interceptors.push(this.clientAdapter.setupRequestInterceptor(this))
+      this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
+
+      this.listeners.forEach(l => l.initialized && l.initialized())
+      this._initialized = true
     }
-
-    const serverConfiguration = await this.serverConfiguration
-    this._serverConfiguration = serverConfiguration
-
-    this.interceptors.push(this.clientAdapter.setupRequestInterceptor(this))
-    this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
-
-    this.listeners.forEach(l => l.initialized && l.initialized())
   }
 
-  destroy () {
+  get initialized () {
+    return this._initialized
+  }
+
+  release () {
     for (const handle of this.interceptors) {
       handle()
     }
 
     this.removeListener(...this.listeners)
+    this._initialized = false
   }
 
   addListener (...listeners: AuthListener[]) {

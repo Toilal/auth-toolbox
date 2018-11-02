@@ -4,7 +4,7 @@ import Auth from './auth'
 export interface IAuth<C, R> {
   init (): Promise<void>
 
-  destroy (): void
+  release (): void
 
   getTokens (): Tokens | undefined
 
