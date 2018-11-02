@@ -4,6 +4,8 @@ import Auth from './auth'
 export interface IAuth<C, R> {
   init (): Promise<void>
 
+  destroy (): void
+
   getTokens (): Tokens | undefined
 
   isAuthenticated (): boolean
@@ -64,7 +66,9 @@ export interface ClientAdapter<C, Q, R> {
 
   asResponse (clientResponse: R): Response
 
-  init (auth: IAuthInternals<C, Q, R>): any
+  setupRequestInterceptor (auth: IAuthInternals<C, Q, R>): () => void
+
+  setupErrorResponseInterceptor (auth: IAuthInternals<C, Q, R>): () => void
 }
 
 export interface ServerAdapter<C> {

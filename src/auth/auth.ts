@@ -25,6 +25,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
 
   private tokens?: Tokens
   private saveCredentials: boolean = false
+  private interceptors: (() => void)[] = []
 
   private renewRunning: boolean = false
   private renewPromises: { promise: Promise<any>, resolve: any, reject: any }[] = []
@@ -75,8 +76,18 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
     const serverConfiguration = await this.serverConfiguration
     this._serverConfiguration = serverConfiguration
 
-    this.clientAdapter.init(this)
+    this.interceptors.push(this.clientAdapter.setupRequestInterceptor(this))
+    this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
+
     this.listeners.forEach(l => l.initialized && l.initialized())
+  }
+
+  destroy () {
+    for (const handle of this.interceptors) {
+      handle()
+    }
+
+    this.removeListener(...this.listeners)
   }
 
   addListener (...listeners: AuthListener[]) {

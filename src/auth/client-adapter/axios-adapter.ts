@@ -6,9 +6,6 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
   private axios: AxiosInstance
   private config: AxiosRequestConfig
 
-  private requestInterceptor?: number
-  private responseInterceptor?: number
-
   constructor (axios: AxiosInstance, config: AxiosRequestConfig = {}) {
     this.axios = axios
     this.config = config
@@ -68,35 +65,35 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
     return r
   }
 
-  init (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
-    if (!this.requestInterceptor) {
-      this.requestInterceptor = this.axios.interceptors.request.use(async (config) => {
-        const request = this.asRequest(config)
+  setupRequestInterceptor (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
+    const id = this.axios.interceptors.request.use(async (config) => {
+      const request = this.asRequest(config)
 
-        const intercepted = await auth.interceptRequest(request)
+      const intercepted = await auth.interceptRequest(request)
+      if (intercepted) {
+        config.data = request.data
+        config.headers = request.headers
+      }
+      return config
+    })
+    return () => this.axios.interceptors.request.eject(id)
+  }
+
+  setupErrorResponseInterceptor (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
+    const id = this.axios.interceptors.response.use((response: AxiosResponse) => response, async (error: AxiosError) => {
+      if (error.response) {
+        const request = this.asRequest(error.config)
+        const response = this.asResponse(error.response)
+
+        const intercepted = await auth.interceptErrorResponse(request, response)
         if (intercepted) {
-          config.data = request.data
-          config.headers = request.headers
+          error.config.baseURL = undefined // Workaround
+          return this.axios.request(error.config)
         }
-        return config
-      })
-    }
+      }
 
-    if (!this.responseInterceptor) {
-      this.responseInterceptor = this.axios.interceptors.response.use((response: AxiosResponse) => response, async (error: AxiosError) => {
-        if (error.response) {
-          const request = this.asRequest(error.config)
-          const response = this.asResponse(error.response)
-
-          const intercepted = await auth.interceptErrorResponse(request, response)
-          if (intercepted) {
-            error.config.baseURL = undefined // Workaround
-            return this.axios.request(error.config)
-          }
-        }
-
-        throw error
-      })
-    }
+      throw error
+    })
+    return () => this.axios.interceptors.response.eject(id)
   }
 }

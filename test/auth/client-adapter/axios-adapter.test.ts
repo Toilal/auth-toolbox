@@ -233,7 +233,7 @@ describe('AxiosAdapter', () => {
 
     const authMock: IAuthInternals<any, any, any> = createMockInstance(Auth)
     authMock.interceptRequest = interceptRequestMock
-    axiosAdapter.init(authMock)
+    axiosAdapter.setupRequestInterceptor(authMock)
 
     const response = await axiosAdapter.request({ method: 'GET', url: 'testUrl' })
 
@@ -266,7 +266,7 @@ describe('AxiosAdapter', () => {
 
     const authMock: IAuthInternals<any, any, any> = createMockInstance(Auth)
     authMock.interceptErrorResponse = interceptErrorResponse
-    axiosAdapter.init(authMock)
+    axiosAdapter.setupErrorResponseInterceptor(authMock)
 
     try {
       await axiosAdapter.request({ method: 'GET', url: 'testUrl' })
