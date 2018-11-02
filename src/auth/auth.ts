@@ -1,9 +1,12 @@
 import {
   AuthListener,
   ClientAdapter,
-  IAuthInternals, Request, Response,
+  IAuthInternals,
+  Request,
+  Response,
   ServerAdapter,
-  ServerConfiguration, TokenDecoder,
+  ServerConfiguration,
+  TokenDecoder,
   Tokens,
   TokenStorage
 } from '.'
@@ -80,6 +83,16 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
     this.listeners.push(...listeners)
   }
 
+  removeListeners (...listeners: AuthListener[]) {
+    for (const listener of listeners) {
+      const indexOf = this.listeners.indexOf(listener)
+
+      if (indexOf > -1) {
+        this.listeners.splice(indexOf, 1)
+      }
+    }
+  }
+
   getTokens (): Tokens | undefined {
     return this.tokens
   }
@@ -110,23 +123,23 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   }
 
   async isLoginRequest (request: Request) {
-    const serverConfiguration = await this.getServerConfiguration();
+    const serverConfiguration = await this.getServerConfiguration()
     if (serverConfiguration.loginEndpoint &&
       serverConfiguration.loginEndpoint.method === request.method &&
       serverConfiguration.loginEndpoint.url === request.url) {
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   async isRenewRequest (request: Request) {
-    const serverConfiguration = await this.getServerConfiguration();
+    const serverConfiguration = await this.getServerConfiguration()
     if (serverConfiguration.renewEndpoint &&
       serverConfiguration.renewEndpoint.method === request.method &&
       serverConfiguration.renewEndpoint.url === request.url) {
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   async login (credentials: C, saveCredentials?: boolean): Promise<R> {
@@ -144,14 +157,14 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
 
   async renew (): Promise<R> {
     if (!this.tokens) {
-      throw new Error("Token is not available")
+      throw new Error('Token is not available')
     }
     if (!this.renewRunning) {
       try {
         this.renewRunning = true
         const serverConfiguration = await this.getServerConfiguration()
         if (!serverConfiguration.renewEndpoint) {
-          throw new Error("Renew endpoint is not configured")
+          throw new Error('Renew endpoint is not configured')
         }
         const request = this.serverAdapter.asRenewRequest(serverConfiguration.renewEndpoint, this.tokens)
         const response = await this.clientAdapter.renew(request)
@@ -180,7 +193,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
   }
 
   async logout (): Promise<R | void> {
-    if (!this.tokens) throw new Error("Token is not available")
+    if (!this.tokens) throw new Error('Token is not available')
     let response
     const serverConfiguration = await this.getServerConfiguration()
     if (serverConfiguration.logoutEndpoint) {
@@ -225,7 +238,7 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
   }
 
-  async interceptRequest(request: Request) {
+  async interceptRequest (request: Request) {
     const tokens = this.getTokens()
     let accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
     let refreshToken = (tokens && tokens.refresh) ? tokens.refresh.value : undefined
@@ -243,33 +256,33 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
         accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
       }
       this.serverAdapter.setAccessToken(request, accessToken)
-      return true;
+      return true
     }
     return false
   }
 
   async interceptErrorResponse (request: Request, response: Response) {
-      const tokens = this.getTokens()
-      const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
+    const tokens = this.getTokens()
+    const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
 
-      if (!refreshToken) {
-        return false
-      }
+    if (!refreshToken) {
+      return false
+    }
 
-      const isRenewRequest = await this.isRenewRequest(request)
-      if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
-        try {
-          await this.renew()
-          return true
-        } catch (err) {
-          await this.expired()
-          return false
-        }
-      } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
+    const isRenewRequest = await this.isRenewRequest(request)
+    if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
+      try {
+        await this.renew()
+        return true
+      } catch (err) {
         await this.expired()
         return false
       }
-
+    } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
+      await this.expired()
       return false
+    }
+
+    return false
   }
 }

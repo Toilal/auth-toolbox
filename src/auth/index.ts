@@ -15,6 +15,8 @@ export interface IAuth<C, R> {
   renew (): Promise<R>
 
   addListeners (...listeners: AuthListener[]): void
+
+  removeListeners (...listeners: AuthListener[]): void
 }
 
 export interface IAuthInternals<C, Q, R> extends IAuth<C, R> {
@@ -60,7 +62,7 @@ export interface ClientAdapter<C, Q, R> {
 
   request (request: Request): Promise<R>
 
-  asResponse(clientResponse: R): Response
+  asResponse (clientResponse: R): Response
 
   init (auth: IAuthInternals<C, Q, R>): any
 }
@@ -104,6 +106,7 @@ export interface Tokens {
 
 export interface TokenDecoder {
   isExpired (token: Token): boolean
+
   decode? (token: Token): object | undefined
 }
 
