@@ -3,7 +3,7 @@ import OpenidConnectAdapter, {
   openidConnectDiscovery
 } from '../../../src/auth/server-adapter/openid-connect-adapter'
 
-import AxiosAdapterTest from '../../../src/auth/client-adapter/axios-adapter'
+import AxiosAdapter from '../../../src/auth/client-adapter/axios-adapter'
 import axios from 'axios'
 
 import { advanceTo, clear } from 'jest-date-mock'
@@ -25,7 +25,7 @@ describe('Openid Connect Adapter - Discovery', () => {
       end_session_endpoint: 'endSessionEndpoint'
     })
 
-    const axiosAdapter = new AxiosAdapterTest(axiosInstance)
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
     const configuration = await openidConnectDiscovery(axiosAdapter, 'issuer')
 
     expect(configuration.loginEndpoint).toEqual({ method: 'POST', url: 'tokenEndpoint' })
