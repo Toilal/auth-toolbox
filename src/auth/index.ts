@@ -14,9 +14,9 @@ export interface IAuth<C, R> {
 
   renew (): Promise<R>
 
-  addListeners (...listeners: AuthListener[]): void
+  addListener (...listeners: AuthListener[]): void
 
-  removeListeners (...listeners: AuthListener[]): void
+  removeListener (...listeners: AuthListener[]): void
 }
 
 export interface IAuthInternals<C, Q, R> extends IAuth<C, R> {

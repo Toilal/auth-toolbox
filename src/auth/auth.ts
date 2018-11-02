@@ -79,11 +79,11 @@ export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
     this.listeners.forEach(l => l.initialized && l.initialized())
   }
 
-  addListeners (...listeners: AuthListener[]) {
+  addListener (...listeners: AuthListener[]) {
     this.listeners.push(...listeners)
   }
 
-  removeListeners (...listeners: AuthListener[]) {
+  removeListener (...listeners: AuthListener[]) {
     for (const listener of listeners) {
       const indexOf = this.listeners.indexOf(listener)
 
