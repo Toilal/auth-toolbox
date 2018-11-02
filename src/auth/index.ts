@@ -22,13 +22,6 @@ export interface IAuth<C, R> {
 }
 
 export interface IAuthInternals<C, Q, R> extends IAuth<C, R> {
-  serverAdapter: ServerAdapter<C>
-  serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
-  clientAdapter: ClientAdapter<C, Q, R>
-  tokenStorage?: TokenStorage
-  persistentTokenStorage?: TokenStorage
-  listeners: AuthListener[]
-
   unsetTokens (): void
 
   setTokens (tokens: Tokens): void

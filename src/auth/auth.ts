@@ -15,13 +15,13 @@ import DefaultTokenDecoder from './token-decoder/default-token-decoder'
 import DefaultTokenStorage from './token-storage/default-token-storage'
 
 export default class Auth<C, Q, R> implements IAuthInternals<C, Q, R> {
-  serverAdapter: ServerAdapter<C>
-  serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
-  clientAdapter: ClientAdapter<C, Q, R>
-  tokenDecoder?: TokenDecoder
-  tokenStorage?: TokenStorage
-  persistentTokenStorage?: TokenStorage
-  listeners: AuthListener[] = []
+  private serverAdapter: ServerAdapter<C>
+  private serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
+  private clientAdapter: ClientAdapter<C, Q, R>
+  private tokenDecoder?: TokenDecoder
+  private tokenStorage?: TokenStorage
+  private persistentTokenStorage?: TokenStorage
+  private listeners: AuthListener[] = []
 
   private tokens?: Tokens
   private saveCredentials: boolean = false
