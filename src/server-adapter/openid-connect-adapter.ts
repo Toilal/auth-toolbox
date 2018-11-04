@@ -2,11 +2,12 @@ import {
   ClientAdapter,
   Request,
   Response,
-  ServerAdapter, ServerConfiguration,
+  ServerAdapter,
+  ServerConfiguration,
   ServerEndpoint,
   Tokens,
   UsernamePasswordCredentials
-} from '..'
+} from '../auth-toolbox'
 import * as Querystring from 'querystring'
 
 export interface LoginResponse {

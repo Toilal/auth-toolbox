@@ -11,7 +11,7 @@ import {
   TokenDecoder,
   Tokens,
   TokenStorage
-} from '.'
+} from './auth-toolbox'
 
 import DefaultTokenDecoder from './token-decoder/default-token-decoder'
 import DefaultTokenStorage from './token-storage/default-token-storage'

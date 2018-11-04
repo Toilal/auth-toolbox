@@ -1,4 +1,3 @@
-import { IAuth, Tokens, TokenStorage } from './/index'
 import Auth from './auth'
 
 export interface IAuth<C, R> {

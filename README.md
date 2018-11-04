@@ -1,14 +1,17 @@
 # Auth Toolbox
 
-*The developer toolbox for REST Authentication.*
+*The developer toolbox for HTTP Client Authentication.*
 
-Auth Toolbox is a set of TypeScript modules that can be used to implement REST client authentication.
+Auth Toolbox is a set of TypeScript modules that can be used to add HTTP Client authentication to your application.
+
+`Auth` class provides methods like `login()` and `logout()`, and can be constructed with various adapters 
+to support any HTTP Client and any HTTP Server.
 
 ### Features
 
-#### Supported HTTP client
+#### Supported HTTP Clients
 
-Auth Toolbox supports the following HTTP clients:
+Auth Toolbox supports the following HTTP Clients:
   
  - XMLHttpRequest
  - axios
@@ -18,7 +21,7 @@ Auth Toolbox supports the following HTTP clients:
  
 Any other client may be implemented.
  
-#### Supported protocols
+#### Supported HTTP Servers protocols
 
 Auth Toolbox supports the following protocols out of the box:
 

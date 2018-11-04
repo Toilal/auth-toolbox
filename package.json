@@ -1,18 +1,18 @@
 {
-  "name": "jwt-toolbox",
+  "name": "auth-toolbox",
   "version": "0.0.0",
   "description": "",
   "keywords": [],
-  "main": "dist/jwt-toolbox.umd.js",
-  "module": "dist/jwt-toolbox.es5.js",
-  "typings": "dist/types/jwt-toolbox.d.ts",
+  "main": "dist/auth-toolbox.umd.js",
+  "module": "dist/auth-toolbox.es5.js",
+  "typings": "dist/types/auth-toolbox.d.ts",
   "files": [
     "dist"
   ],
   "author": "Rémi Alvergnat <toilal.dev@gmail.com>",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/Toilal/auth-toolbox"
   },
   "license": "MIT",
   "engines": {

@@ -1,7 +1,7 @@
-import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../../src/auth'
-import AxiosAdapter from '../../src/auth/client-adapter/axios-adapter'
+import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../src/auth-toolbox'
+import AxiosAdapter from '../src/client-adapter/axios-adapter'
 import axios from 'axios'
-import OpenidConnectAdapter, { LoginResponse } from '../../src/auth/server-adapter/openid-connect-adapter'
+import OpenidConnectAdapter, { LoginResponse } from '../src/server-adapter/openid-connect-adapter'
 import MockAdapter from 'axios-mock-adapter'
 
 describe('Auth', () => {

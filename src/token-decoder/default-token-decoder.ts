@@ -1,4 +1,4 @@
-import { Token, TokenDecoder } from '..'
+import { Token, TokenDecoder } from '../auth-toolbox'
 
 export default class DefaultTokenDecoder implements TokenDecoder {
   protected offset: number

@@ -1,5 +1,5 @@
-import JwtTokenDecoder from '../../../src/auth/token-decoder/jwt-token-decoder'
-import { Token } from '../../../src/auth'
+import JwtTokenDecoder from '../../src/token-decoder/jwt-token-decoder'
+import { Token } from '../../src/auth-toolbox'
 
 import { advanceTo, clear } from 'jest-date-mock'
 

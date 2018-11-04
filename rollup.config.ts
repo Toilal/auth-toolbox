@@ -7,7 +7,7 @@ import json from 'rollup-plugin-json'
 
 const pkg = require('./package.json')
 
-const libraryName = 'jwt-toolbox'
+const libraryName = 'auth-toolbox'
 
 export default {
   input: `src/${libraryName}.ts`,

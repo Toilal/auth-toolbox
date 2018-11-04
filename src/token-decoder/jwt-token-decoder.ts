@@ -1,4 +1,4 @@
-import { Token, TokenDecoder } from '..'
+import { Token, TokenDecoder } from '../auth-toolbox'
 import DefaultTokenDecoder from './default-token-decoder'
 import * as jwtDecode from 'jwt-decode'
 

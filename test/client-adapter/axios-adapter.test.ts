@@ -1,8 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
-import AxiosAdapter from '../../../src/auth/client-adapter/axios-adapter'
-import Auth, { Request, RequestInterceptor, ResponseInterceptor } from '../../../src/auth'
+import AxiosAdapter from '../../src/client-adapter/axios-adapter'
+import Auth, { Request, RequestInterceptor, ResponseInterceptor } from '../../src/auth-toolbox'
 import MockAdapter from 'axios-mock-adapter'
-import { AsRequestError } from '../../../src/auth/client-adapter'
+import { AsRequestError } from '../../src/client-adapter'
 import createMockInstance from 'jest-create-mock-instance'
 
 

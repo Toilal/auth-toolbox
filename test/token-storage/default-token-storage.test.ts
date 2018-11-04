@@ -1,5 +1,5 @@
-import DefaultTokenStorage from '../../../src/auth/token-storage/default-token-storage'
-import { Tokens } from '../../../src/auth'
+import DefaultTokenStorage from '../../src/token-storage/default-token-storage'
+import { Tokens } from '../../src/auth-toolbox'
 
 describe('Default Token Storage', () => {
   it('default module is defined', () => {
