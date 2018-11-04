@@ -2,39 +2,31 @@ import { IAuth, Tokens, TokenStorage } from './/index'
 import Auth from './auth'
 
 export interface IAuth<C, R> {
-  init (): Promise<void>
+  loadTokensFromStorage (): Promise<Tokens | undefined>
 
   release (): void
-
-  getTokens (): Tokens | undefined
-
-  isAuthenticated (): boolean
 
   login (credentials: C, saveCredentials?: boolean): Promise<R>
 
   logout (stop?: boolean): Promise<R | void>
 
-  renew (): Promise<R>
+  renew (): Promise<R | void>
+
+  getTokens (): Tokens | undefined
+
+  isAuthenticated (): boolean
 
   addListener (...listeners: AuthListener[]): void
 
   removeListener (...listeners: AuthListener[]): void
 }
 
-export interface IAuthInternals<C, Q, R> extends IAuth<C, R> {
-  unsetTokens (): void
-
-  setTokens (tokens: Tokens): void
-
-  expired (): void
-
-  isLoginRequest (request: Request): boolean | Promise<boolean>
-
-  isRenewRequest (request: Request): boolean | Promise<boolean>
-
+export interface RequestInterceptor {
   interceptRequest (request: Request): boolean | Promise<boolean>
+}
 
-  interceptErrorResponse (request: Request, response: Response): boolean | Promise<boolean>
+export interface ResponseInterceptor {
+  interceptResponse (request: Request, response: Response): boolean | Promise<boolean>
 }
 
 export interface Request extends ServerEndpoint {
@@ -48,7 +40,7 @@ export interface Response {
   status?: number
 }
 
-export interface ClientAdapter<C, Q, R> {
+export interface ClientAdapter<R> {
   login (request: Request): Promise<R>
 
   renew (request: Request): Promise<R>
@@ -59,9 +51,9 @@ export interface ClientAdapter<C, Q, R> {
 
   asResponse (clientResponse: R): Response
 
-  setupRequestInterceptor (auth: IAuthInternals<C, Q, R>): () => void
+  setupRequestInterceptor (interceptor: RequestInterceptor): () => void
 
-  setupErrorResponseInterceptor (auth: IAuthInternals<C, Q, R>): () => void
+  setupErrorResponseInterceptor (interceptor: ResponseInterceptor): () => void
 }
 
 export interface ServerAdapter<C> {
@@ -108,8 +100,6 @@ export interface TokenDecoder {
 }
 
 export interface AuthListener {
-  initialized? (): any
-
   tokensChanged? (tokens?: Tokens): any
 
   expired? (): any

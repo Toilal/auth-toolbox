@@ -15,11 +15,11 @@ describe('Jwt Token Decoder', () => {
   const accessTokenExpNowMinus9 = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM2MiwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.feOjEJUK5lS80e9tysEty6c3E15A9xyNl5RcFeBzz5k'
 
 
-  beforeAll(() => {
+  beforeEach(() => {
     advanceTo(133713371337)
   })
 
-  afterAll(() => {
+  afterEach(() => {
     clear()
   })
 

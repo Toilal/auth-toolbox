@@ -2,7 +2,7 @@ import {
   ClientAdapter,
   Request,
   Response,
-  ServerAdapter,
+  ServerAdapter, ServerConfiguration,
   ServerEndpoint,
   Tokens,
   UsernamePasswordCredentials
@@ -22,7 +22,7 @@ export interface OpenidConfiguration {
   end_session_endpoint: string
 }
 
-export const openidConnectDiscovery = async <C, Q, R> (client: ClientAdapter<C, Q, R>, issuerUrl: string) => {
+export const openidConnectDiscovery = async <C, Q, R> (client: ClientAdapter<C, Q, R>, issuerUrl: string): Promise<ServerConfiguration> => {
   const clientResponse = await client.request({ method: 'GET', url: issuerUrl + '/.well-known/openid-configuration' })
   const response = client.asResponse(clientResponse)
   const openidConfiguration: OpenidConfiguration = response.data

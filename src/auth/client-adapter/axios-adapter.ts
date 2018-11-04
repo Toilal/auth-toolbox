@@ -1,8 +1,8 @@
 import { AsRequestError } from '.'
-import { ClientAdapter, IAuthInternals, Request, Response, UsernamePasswordCredentials } from '..'
+import { ClientAdapter, Request, RequestInterceptor, Response, ResponseInterceptor } from '..'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
-export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCredentials, AxiosRequestConfig, AxiosResponse> {
+export default class AxiosAdapter implements ClientAdapter<AxiosResponse> {
   private axios: AxiosInstance
   private config: AxiosRequestConfig
 
@@ -65,11 +65,11 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
     return r
   }
 
-  setupRequestInterceptor (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
+  setupRequestInterceptor (interceptor: RequestInterceptor) {
     const id = this.axios.interceptors.request.use(async (config) => {
       const request = this.asRequest(config)
 
-      const intercepted = await auth.interceptRequest(request)
+      const intercepted = await interceptor.interceptRequest(request)
       if (intercepted) {
         config.data = request.data
         config.headers = request.headers
@@ -79,13 +79,13 @@ export default class AxiosAdapter implements ClientAdapter<UsernamePasswordCrede
     return () => this.axios.interceptors.request.eject(id)
   }
 
-  setupErrorResponseInterceptor (auth: IAuthInternals<any, AxiosRequestConfig, AxiosResponse>) {
+  setupErrorResponseInterceptor (interceptor: ResponseInterceptor) {
     const id = this.axios.interceptors.response.use((response: AxiosResponse) => response, async (error: AxiosError) => {
       if (error.response) {
         const request = this.asRequest(error.config)
         const response = this.asResponse(error.response)
 
-        const intercepted = await auth.interceptErrorResponse(request, response)
+        const intercepted = await interceptor.interceptResponse(request, response)
         if (intercepted) {
           error.config.baseURL = undefined // Workaround
           return this.axios.request(error.config)

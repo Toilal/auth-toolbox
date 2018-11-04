@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import AxiosAdapter from '../../../src/auth/client-adapter/axios-adapter'
-import Auth, { IAuthInternals, Request } from '../../../src/auth'
+import Auth, { Request, RequestInterceptor, ResponseInterceptor } from '../../../src/auth'
 import MockAdapter from 'axios-mock-adapter'
 import { AsRequestError } from '../../../src/auth/client-adapter'
 import createMockInstance from 'jest-create-mock-instance'
@@ -231,7 +231,7 @@ describe('AxiosAdapter', () => {
       return true
     })
 
-    const authMock: IAuthInternals<any, any, any> = createMockInstance(Auth)
+    const authMock: RequestInterceptor = createMockInstance(Auth)
     authMock.interceptRequest = interceptRequestMock
     axiosAdapter.setupRequestInterceptor(authMock)
 
@@ -264,8 +264,8 @@ describe('AxiosAdapter', () => {
       return false
     })
 
-    const authMock: IAuthInternals<any, any, any> = createMockInstance(Auth)
-    authMock.interceptErrorResponse = interceptErrorResponse
+    const authMock: ResponseInterceptor = createMockInstance(Auth)
+    authMock.interceptResponse = interceptErrorResponse
     axiosAdapter.setupErrorResponseInterceptor(authMock)
 
     try {
@@ -276,8 +276,8 @@ describe('AxiosAdapter', () => {
       }).toThrow()
     }
 
-    expect(authMock.interceptErrorResponse).toHaveBeenCalledTimes(2)
-    expect(authMock.interceptErrorResponse).toHaveBeenLastCalledWith({
+    expect(authMock.interceptResponse).toHaveBeenCalledTimes(2)
+    expect(authMock.interceptResponse).toHaveBeenLastCalledWith({
       method: 'get',
       url: 'testUrl',
       headers: { 'Accept': 'application/json, text/plain, */*' }

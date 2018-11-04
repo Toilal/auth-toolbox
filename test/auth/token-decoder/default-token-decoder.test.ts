@@ -4,11 +4,11 @@ import { Token } from '../../../src/auth'
 import { advanceTo, clear } from 'jest-date-mock'
 
 describe('Default Token Decoder', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     advanceTo(133713371337)
   })
 
-  afterAll(() => {
+  afterEach(() => {
     clear()
   })
 

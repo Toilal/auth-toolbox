@@ -6,11 +6,11 @@ describe('Default Token Storage', () => {
     expect(DefaultTokenStorage).toBeDefined()
   })
 
-  beforeAll(() => {
+  beforeEach(() => {
     sessionStorage.clear()
   })
 
-  afterAll(() => {
+  afterEach(() => {
     sessionStorage.clear()
   })
 

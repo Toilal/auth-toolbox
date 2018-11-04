@@ -37,11 +37,11 @@ describe('Openid Connect Adapter - Discovery', () => {
 })
 
 describe('Openid Connect Adapter', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     advanceTo(133713371337)
   })
 
-  afterAll(() => {
+  afterEach(() => {
     clear()
   })
 
