@@ -188,7 +188,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   private isLoginRequest (request: Request) {
     const serverConfiguration = this.serverConfiguration
     if (serverConfiguration.loginEndpoint &&
-      serverConfiguration.loginEndpoint.method === request.method &&
+      serverConfiguration.loginEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
       serverConfiguration.loginEndpoint.url === request.url) {
       return true
     }
@@ -198,7 +198,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   private isRenewRequest (request: Request) {
     const serverConfiguration = this.serverConfiguration
     if (serverConfiguration.renewEndpoint &&
-      serverConfiguration.renewEndpoint.method === request.method &&
+      serverConfiguration.renewEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
       serverConfiguration.renewEndpoint.url === request.url) {
       return true
     }
@@ -249,9 +249,9 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
           throw err
         }
         tokens = this.getTokens()! // it's been renewed, so we are sure tokens are defined
-        this.serverAdapter.setAccessToken(request, tokens.access.value)
-        return true
       }
+      this.serverAdapter.setAccessToken(request, tokens.access.value)
+      return true
     }
     return false
   }
