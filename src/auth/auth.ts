@@ -237,24 +237,21 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   }
 
   async interceptRequest (request: Request) {
-    const tokens = this.getTokens()
-    let accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
-    let refreshToken = (tokens && tokens.refresh) ? tokens.refresh.value : undefined
+    let tokens = this.getTokens()
     const isLoginRequest = this.isLoginRequest(request)
-    if (tokens && accessToken && !isLoginRequest) {
+    if (tokens && tokens.access && !isLoginRequest) {
       const isRenewRequest = this.isRenewRequest(request)
-      if (refreshToken && !isRenewRequest && this.accessTokenDecoder && this.accessTokenDecoder.isExpired(tokens.access)) {
+      if (tokens.refresh && !isRenewRequest && this.accessTokenDecoder && this.accessTokenDecoder.isExpired(tokens.access)) {
         try {
           await this.renew()
         } catch (err) {
           await this.expired()
           throw err
         }
-        const tokens = this.getTokens()
-        accessToken = (tokens && tokens.access) ? tokens.access.value : undefined
+        tokens = this.getTokens()! // it's been renewed, so we are sure tokens are defined
+        this.serverAdapter.setAccessToken(request, tokens.access.value)
+        return true
       }
-      this.serverAdapter.setAccessToken(request, accessToken)
-      return true
     }
     return false
   }
