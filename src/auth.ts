@@ -138,21 +138,39 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     if (saveCredentials !== undefined) {
       this.saveCredentials = !!saveCredentials
     }
+    if (this.saveCredentials && !this.serverConfiguration.renewEndpoint) {
+      tokens.credentials = credentials
+    }
     await this.setTokens(tokens)
     this.listeners.forEach(l => l.login && l.login())
     return response
   }
 
   async renew(): Promise<R | void> {
-    if (this.tokens && this.serverConfiguration.renewEndpoint) {
+    if (this.tokens && this.serverConfiguration) {
       if (!this.renewRunning) {
         try {
           this.renewRunning = true
-          const request = this.serverAdapter.asRenewRequest(
-            this.serverConfiguration.renewEndpoint,
-            this.tokens
-          )
-          const response = await this.clientAdapter.renew(request)
+          let response: R
+          if (this.serverConfiguration.renewEndpoint) {
+            if (!this.tokens.refresh) {
+              throw new Error('No refresh token available to renew')
+            }
+            const request = this.serverAdapter.asRenewRequest(
+              this.serverConfiguration.renewEndpoint,
+              this.tokens.refresh
+            )
+            response = await this.clientAdapter.renew(request)
+          } else {
+            if (!this.tokens.credentials) {
+              throw new Error(
+                'Credentials are not available. ' +
+                  'saveCredentials should be true on login to allow renew method without renewEndpoint and refresh token.'
+              )
+            }
+            response = await this.login(this.tokens.credentials)
+          }
+
           const tokens = this.serverAdapter.getResponseTokens(response)
           await this.setTokens(tokens)
           for (const renewTokenPromise of this.renewPromises) {
@@ -182,10 +200,10 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     if (this.tokens) {
       let response
       const serverConfiguration = this.serverConfiguration
-      if (serverConfiguration.logoutEndpoint) {
+      if (serverConfiguration.logoutEndpoint && this.tokens.refresh) {
         const request = this.serverAdapter.asLogoutRequest(
           serverConfiguration.logoutEndpoint,
-          this.tokens
+          this.tokens.refresh
         )
         response = await this.clientAdapter.logout(request)
       }

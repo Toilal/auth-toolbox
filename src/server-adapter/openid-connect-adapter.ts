@@ -5,6 +5,7 @@ import {
   ServerAdapter,
   ServerConfiguration,
   ServerEndpoint,
+  Token,
   Tokens,
   UsernamePasswordCredentials
 } from '../auth-toolbox'
@@ -54,13 +55,9 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
     return { ...loginEndpoint, data, headers }
   }
 
-  asLogoutRequest(logoutEndpoint: ServerEndpoint, tokens: Tokens): Request {
-    if (!tokens.refresh) {
-      throw new Error('Refresh token is not defined')
-    }
-
+  asLogoutRequest(logoutEndpoint: ServerEndpoint, refreshToken: Token): Request {
     const rawData = {
-      refresh_token: tokens.refresh.value
+      refresh_token: refreshToken.value
     }
 
     const data = stringify(rawData)
@@ -69,14 +66,10 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
     return { ...logoutEndpoint, data, headers }
   }
 
-  asRenewRequest(renewEndpoint: ServerEndpoint, tokens: Tokens): Request {
-    if (!tokens.refresh) {
-      throw new Error('Refresh token is not defined')
-    }
-
+  asRenewRequest(renewEndpoint: ServerEndpoint, refreshToken: Token): Request {
     const rawData = {
       grant_type: 'refresh_token',
-      refresh_token: tokens.refresh.value
+      refresh_token: refreshToken.value
     }
 
     const data = stringify(rawData)

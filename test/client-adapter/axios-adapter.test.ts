@@ -2,9 +2,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import AxiosAdapter from '../../src/client-adapter/axios-adapter'
 import Auth, { Request, RequestInterceptor, ResponseInterceptor } from '../../src/auth-toolbox'
 import MockAdapter from 'axios-mock-adapter'
-import { AsRequestError } from '../../src/client-adapter'
 import createMockInstance from 'jest-create-mock-instance'
-
 
 describe('AxiosAdapter', () => {
   it('perform login request', async () => {
@@ -169,10 +167,13 @@ describe('AxiosAdapter', () => {
       status: 200,
       statusText: 'OK',
       headers: { testHeader: 'testHeaderValue' }
-
     }
     const response = axiosAdapter.asResponse(axiosResponse)
-    expect(response).toEqual({ data: axiosResponse.data, status: axiosResponse.status, headers: axiosResponse.headers })
+    expect(response).toEqual({
+      data: axiosResponse.data,
+      status: axiosResponse.status,
+      headers: axiosResponse.headers
+    })
   })
 
   it('converts to request', () => {
@@ -203,7 +204,7 @@ describe('AxiosAdapter', () => {
       data: 'testData',
       headers: { testHeader: 'testHeaderValue' }
     }
-    expect(() => axiosAdapter.asRequest(axiosRequest)).toThrowError(AsRequestError)
+    expect(() => axiosAdapter.asRequest(axiosRequest)).toThrowError(Error)
   })
 
   it('fails to convert to request if method is not defined', () => {
@@ -215,7 +216,7 @@ describe('AxiosAdapter', () => {
       data: 'testData',
       headers: { testHeader: 'testHeaderValue' }
     }
-    expect(() => axiosAdapter.asRequest(axiosRequest)).toThrowError(AsRequestError)
+    expect(() => axiosAdapter.asRequest(axiosRequest)).toThrowError(Error)
   })
 
   it('intercept login requests', async () => {
@@ -277,13 +278,16 @@ describe('AxiosAdapter', () => {
     }
 
     expect(authMock.interceptResponse).toHaveBeenCalledTimes(2)
-    expect(authMock.interceptResponse).toHaveBeenLastCalledWith({
-      method: 'get',
-      url: 'testUrl',
-      headers: { 'Accept': 'application/json, text/plain, */*' }
-    }, {
-      status: 401
-    })
+    expect(authMock.interceptResponse).toHaveBeenLastCalledWith(
+      {
+        method: 'get',
+        url: 'testUrl',
+        headers: { Accept: 'application/json, text/plain, */*' }
+      },
+      {
+        status: 401
+      }
+    )
 
     return null
   })

@@ -71,10 +71,9 @@ describe('Openid Connect Adapter', () => {
     const method = 'POST'
     const url = 'url'
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const access = { value: 'testAccessToken' }
     const refresh = { value: 'testRefreshToken' }
 
-    const loginRequest = adapter.asLogoutRequest({ url, method }, { access, refresh })
+    const loginRequest = adapter.asLogoutRequest({ url, method }, refresh)
     expect(loginRequest.method).toBe(method)
     expect(loginRequest.url).toBe(url)
     expect(loginRequest.headers).toEqual(headers)
@@ -87,10 +86,9 @@ describe('Openid Connect Adapter', () => {
     const method = 'POST'
     const url = 'url'
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const access = { value: 'testAccessToken' }
     const refresh = { value: 'testRefreshToken' }
 
-    const loginRequest = adapter.asRenewRequest({ url, method }, { access, refresh })
+    const loginRequest = adapter.asRenewRequest({ url, method }, refresh)
     expect(loginRequest.method).toBe(method)
     expect(loginRequest.url).toBe(url)
     expect(loginRequest.headers).toEqual(headers)
@@ -139,7 +137,10 @@ describe('Openid Connect Adapter', () => {
     expect(tokens.access).toEqual({ value: response.data.access_token, expiresAt })
     expect(tokens.refresh).toBeDefined()
     if (tokens.refresh) {
-      expect(tokens.refresh).toEqual({ value: response.data.refresh_token, expiresAt: refreshExpiresAt })
+      expect(tokens.refresh).toEqual({
+        value: response.data.refresh_token,
+        expiresAt: refreshExpiresAt
+      })
     }
   })
 
@@ -178,7 +179,11 @@ describe('Openid Connect Adapter', () => {
   it('accessTokenHasExpired returns true when authorization header is present in request', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const request: Request = { method: 'GET', url: 'url', headers: { 'Authorization': 'Bearer accessToken' } }
+    const request: Request = {
+      method: 'GET',
+      url: 'url',
+      headers: { Authorization: 'Bearer accessToken' }
+    }
     const response: Response = { status: 401, data: { error: 'invalid_token' } }
 
     const expired = adapter.accessTokenHasExpired(request, response)
@@ -198,7 +203,11 @@ describe('Openid Connect Adapter', () => {
   it('refreshTokenHasExpired returns true when authorization header is present in request', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const request: Request = { method: 'GET', url: 'url', headers: { 'Authorization': 'Bearer accessToken' } }
+    const request: Request = {
+      method: 'GET',
+      url: 'url',
+      headers: { Authorization: 'Bearer accessToken' }
+    }
     const response: Response = { status: 400, data: { error: 'invalid_grant' } }
 
     const expired = adapter.refreshTokenHasExpired(request, response)

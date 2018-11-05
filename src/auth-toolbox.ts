@@ -13,7 +13,7 @@ export interface IAuth<C, R> {
 
   getTokens(): Tokens | undefined
 
-  decodeAccessToken<T>(): any
+  decodeAccessToken(): any | undefined
 
   isAuthenticated(): boolean
 
@@ -60,9 +60,9 @@ export interface ClientAdapter<R> {
 export interface ServerAdapter<C> {
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: C): Request
 
-  asRenewRequest(renewEndpoint: ServerEndpoint, tokens: Tokens): Request
+  asRenewRequest(renewEndpoint: ServerEndpoint, refreshToken: Token): Request
 
-  asLogoutRequest(logoutEndpoint: ServerEndpoint, tokens: Tokens): Request
+  asLogoutRequest(logoutEndpoint: ServerEndpoint, refreshToken: Token): Request
 
   setAccessToken(request: Request, accessToken: string | undefined): void
 
@@ -89,9 +89,10 @@ export interface Token {
   expiresAt?: Date
 }
 
-export interface Tokens {
+export interface Tokens<C = any> {
   access: Token
   refresh?: Token
+  credentials?: C
 }
 
 export interface TokenDecoder {

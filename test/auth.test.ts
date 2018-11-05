@@ -386,7 +386,7 @@ describe('Auth', () => {
     })
     auth.removeListener(listener)
 
-    const response2 = await auth.login({ username: 'testUsername', password: 'testPassword' })
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
     expect(listener.login).toHaveBeenCalledTimes(1)
     expect(listener.login).toHaveBeenLastCalledWith()
     expect(listener.tokensChanged).toHaveBeenCalledTimes(1)
@@ -401,7 +401,57 @@ describe('Auth', () => {
     return null
   })
 
-  it('logs in with save credentials', async () => {
+  it('logs in with save credentials defined and renewEndpoint defined', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onPost('login').reply(200, {
+      access_token: 'accessTokenValue',
+      refresh_token: 'refreshTokenValue'
+    } as LoginResponse)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' },
+      renewEndpoint: { method: 'post', url: 'renew' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+    expect(auth.isSaveCredentials()).toBeFalsy()
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
+    expect(auth.isSaveCredentials()).toBeTruthy()
+    let tokens = auth.getTokens()
+    expect(tokens).toBeDefined()
+    if (tokens) {
+      expect(tokens.credentials).toBeUndefined()
+    }
+    expect(localStorage.getItem('auth.credentials')).toBeNull()
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' }, false)
+    expect(auth.isSaveCredentials()).toBeFalsy()
+
+    tokens = auth.getTokens()
+    expect(tokens).toBeDefined()
+    if (tokens) {
+      expect(tokens.credentials).toBeUndefined()
+    }
+    expect(localStorage.getItem('auth.credentials')).toBeNull()
+
+    return null
+  })
+
+  it('logs in with save credentials defined and renewEndpoint undefined', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -430,9 +480,26 @@ describe('Auth', () => {
 
     await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
     expect(auth.isSaveCredentials()).toBeTruthy()
+    let tokens = auth.getTokens()
+    expect(tokens).toBeDefined()
+    if (tokens) {
+      expect(tokens.credentials).toBeDefined()
+    }
+    expect(localStorage.getItem('auth.credentials')).not.toBeNull()
+    expect(JSON.parse(localStorage.getItem('auth.credentials')!)).toEqual({
+      username: 'testUsername',
+      password: 'testPassword'
+    })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' }, false)
     expect(auth.isSaveCredentials()).toBeFalsy()
+
+    tokens = auth.getTokens()
+    expect(tokens).toBeDefined()
+    if (tokens) {
+      expect(tokens.credentials).toBeUndefined()
+    }
+    expect(localStorage.getItem('auth.credentials')).toBeNull()
 
     return null
   })
@@ -1012,7 +1079,7 @@ describe('Auth', () => {
     return null
   })
 
-  it('logs int, renew and logs out with undefined TokenStorage', async () => {
+  it('logs in, renew and logs out with undefined TokenStorage and undefined renewEndpoint', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -1026,6 +1093,56 @@ describe('Auth', () => {
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
       loginEndpoint: { method: 'post', url: 'login' },
+      logoutEndpoint: { method: 'post', url: 'logout' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+    try {
+      await auth.renew()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow()
+    }
+    await auth.logout()
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
+    await auth.renew()
+    await auth.logout()
+
+    return null
+  })
+
+  it('logs in, renew and logs out with undefined TokenStorage and defined renewEndpoint', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onPost('login').reply(200, {
+      access_token: 'accessTokenValue',
+      refresh_token: 'refreshTokenValue'
+    } as LoginResponse)
+    axiosMock.onPost('logout').reply(200)
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    } as LoginResponse)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' },
+      renewEndpoint: { method: 'post', url: 'renew' },
       logoutEndpoint: { method: 'post', url: 'logout' }
     }
 

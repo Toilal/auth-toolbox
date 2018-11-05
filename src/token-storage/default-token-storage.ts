@@ -5,22 +5,30 @@ export default class DefaultTokenStorage implements TokenStorage {
   private accessTokenStorageKey: string
   private refreshTokenStorageKey: string
   private expiresAtSuffix: string
+  private credentialsTokenStorageKey: string
 
-  constructor (storage: Storage,
-               accessTokenStorageKey = 'auth.accessToken',
-               refreshTokenStorageKey = 'auth.refreshToken',
-               expiresAtSuffix = '.expiresAt') {
+  constructor(
+    storage: Storage,
+    accessTokenStorageKey = 'auth.accessToken',
+    refreshTokenStorageKey = 'auth.refreshToken',
+    expiresAtSuffix = '.expiresAt',
+    credentialsTokenStorageKey = 'auth.credentials'
+  ) {
     this.storage = storage
     this.accessTokenStorageKey = accessTokenStorageKey
     this.refreshTokenStorageKey = refreshTokenStorageKey
     this.expiresAtSuffix = expiresAtSuffix
+    this.credentialsTokenStorageKey = credentialsTokenStorageKey
   }
 
-  store (tokens: Tokens): any {
+  store(tokens: Tokens): any {
     this.storage.setItem(this.accessTokenStorageKey, tokens.access.value)
 
     if (tokens.access.expiresAt) {
-      this.storage.setItem(this.accessTokenStorageKey + this.expiresAtSuffix, tokens.access.expiresAt.getTime().toString(10))
+      this.storage.setItem(
+        this.accessTokenStorageKey + this.expiresAtSuffix,
+        tokens.access.expiresAt.getTime().toString(10)
+      )
     } else {
       this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
     }
@@ -32,36 +40,60 @@ export default class DefaultTokenStorage implements TokenStorage {
     }
 
     if (tokens.refresh && tokens.refresh.expiresAt) {
-      this.storage.setItem(this.refreshTokenStorageKey + this.expiresAtSuffix, tokens.refresh.expiresAt.getTime().toString(10))
+      this.storage.setItem(
+        this.refreshTokenStorageKey + this.expiresAtSuffix,
+        tokens.refresh.expiresAt.getTime().toString(10)
+      )
     } else {
       this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
     }
+
+    if (tokens.credentials) {
+      this.storage.setItem(this.credentialsTokenStorageKey, JSON.stringify(tokens.credentials))
+    } else {
+      this.storage.removeItem(this.credentialsTokenStorageKey)
+    }
   }
 
-  clear (): any {
+  clear(): any {
     this.storage.removeItem(this.accessTokenStorageKey)
     this.storage.removeItem(this.refreshTokenStorageKey)
 
     this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
     this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
+
+    this.storage.removeItem(this.credentialsTokenStorageKey)
   }
 
-  getTokens (): Tokens | undefined {
+  getTokens(): Tokens | undefined {
     const accessTokenStr = this.storage.getItem(this.accessTokenStorageKey)
     const refreshTokenStr = this.storage.getItem(this.refreshTokenStorageKey)
-    const accessTokenExpiresAtStr = this.storage.getItem(this.accessTokenStorageKey + this.expiresAtSuffix)
-    const refreshTokenExpiresAtStr = this.storage.getItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
+    const accessTokenExpiresAtStr = this.storage.getItem(
+      this.accessTokenStorageKey + this.expiresAtSuffix
+    )
+    const refreshTokenExpiresAtStr = this.storage.getItem(
+      this.refreshTokenStorageKey + this.expiresAtSuffix
+    )
+    const credentialsStr = this.storage.getItem(this.credentialsTokenStorageKey)
 
-    const accessTokenExpiresAt = accessTokenExpiresAtStr ? new Date(parseInt(accessTokenExpiresAtStr, 10)) : undefined
-    const refreshTokenExpiresAt = refreshTokenExpiresAtStr ? new Date(parseInt(refreshTokenExpiresAtStr, 10)) : undefined
+    const accessTokenExpiresAt = accessTokenExpiresAtStr
+      ? new Date(parseInt(accessTokenExpiresAtStr, 10))
+      : undefined
+    const refreshTokenExpiresAt = refreshTokenExpiresAtStr
+      ? new Date(parseInt(refreshTokenExpiresAtStr, 10))
+      : undefined
 
     const accessToken = accessTokenStr ? accessTokenStr : undefined
     const refreshToken = refreshTokenStr ? refreshTokenStr : undefined
+    const credentials = credentialsStr ? JSON.parse(credentialsStr) : undefined
 
     if (accessToken) {
       const tokens: Tokens = { access: { value: accessToken, expiresAt: accessTokenExpiresAt } }
       if (refreshToken) {
         tokens.refresh = { value: refreshToken, expiresAt: refreshTokenExpiresAt }
+      }
+      if (credentialsStr) {
+        tokens.credentials = credentials
       }
       return tokens
     }
