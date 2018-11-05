@@ -1,6 +1,6 @@
 import { Token, TokenDecoder } from '../auth-toolbox'
 import DefaultTokenDecoder from './default-token-decoder'
-import * as jwtDecode from 'jwt-decode'
+import { decode } from 'jsonwebtoken'
 
 interface JwtToken {
   exp: number
@@ -12,7 +12,7 @@ export default class JwtTokenDecoder extends DefaultTokenDecoder implements Toke
   }
 
   decode (token: Token): JwtToken | object {
-    return jwtDecode(token.value)
+    return decode(token.value) as JwtToken
   }
 
   isExpired (token: Token): boolean {

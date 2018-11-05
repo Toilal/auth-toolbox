@@ -6,19 +6,34 @@ import typescript from 'rollup-plugin-typescript2'
 import json from 'rollup-plugin-json'
 
 const pkg = require('./package.json')
+const external = []
+const globals = {}
+
+if (pkg.dependencies) {
+  for (const dependency in pkg.dependencies) {
+    external.push(dependency)
+    globals[dependency] = camelCase(dependency)
+  }
+}
+
+if (pkg.peerDependencies) {
+  for (const dependency in pkg.peerDependencies) {
+    external.push(dependency)
+    globals[dependency] = camelCase(dependency)
+  }
+}
 
 const libraryName = 'auth-toolbox'
 
 export default {
-  input: `src/${libraryName}.ts`,
+  input: `src/${libraryName}.umd.ts`,
   output: [
-    { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true },
-    { file: pkg.module, format: 'es', sourcemap: true },
+    { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true, globals: globals }
   ],
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
-  external: [],
+  external: external,
   watch: {
-    include: 'src/**',
+    include: 'src/**'
   },
   plugins: [
     // Allow json resolution
