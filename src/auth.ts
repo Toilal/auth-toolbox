@@ -30,14 +30,16 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   private interceptors: (() => void)[] = []
 
   private renewRunning: boolean = false
-  private renewPromises: { promise: Promise<any>, resolve: any, reject: any }[] = []
+  private renewPromises: { promise: Promise<any>; resolve: any; reject: any }[] = []
 
-  constructor (serverConfiguration: ServerConfiguration,
-               serverAdapter: ServerAdapter<C>,
-               clientAdapter: ClientAdapter<R>,
-               accessTokenDecoder: TokenDecoder | null = new DefaultTokenDecoder(),
-               tokenStorage: TokenStorage | null = new DefaultTokenStorage(sessionStorage),
-               persistentTokenStorage: TokenStorage | null = new DefaultTokenStorage(localStorage)) {
+  constructor(
+    serverConfiguration: ServerConfiguration,
+    serverAdapter: ServerAdapter<C>,
+    clientAdapter: ClientAdapter<R>,
+    accessTokenDecoder: TokenDecoder | null = new DefaultTokenDecoder(),
+    tokenStorage: TokenStorage | null = new DefaultTokenStorage(sessionStorage),
+    persistentTokenStorage: TokenStorage | null = new DefaultTokenStorage(localStorage)
+  ) {
     this.serverConfiguration = serverConfiguration
     this.serverAdapter = serverAdapter
     this.clientAdapter = clientAdapter
@@ -47,7 +49,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.initClientAdapter()
   }
 
-  public async loadTokensFromStorage (): Promise<Tokens | undefined> {
+  public async loadTokensFromStorage(): Promise<Tokens | undefined> {
     if (this.tokenStorage) {
       let tokens = await this.tokenStorage.getTokens()
       if (this.persistentTokenStorage) {
@@ -77,7 +79,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
   }
 
-  release () {
+  release() {
     for (const handle of this.interceptors) {
       handle()
     }
@@ -85,11 +87,11 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.removeListener(...this.listeners)
   }
 
-  addListener (...listeners: AuthListener[]) {
+  addListener(...listeners: AuthListener[]) {
     this.listeners.push(...listeners)
   }
 
-  removeListener (...listeners: AuthListener[]) {
+  removeListener(...listeners: AuthListener[]) {
     for (const listener of listeners) {
       const indexOf = this.listeners.indexOf(listener)
 
@@ -99,29 +101,38 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
   }
 
-  getTokens (): Tokens | undefined {
+  getTokens(): Tokens | undefined {
     return this.tokens
   }
 
-  get accessToken (): string | undefined {
+  decodeAccessToken(): any | undefined {
+    if (this.tokens && this.accessTokenDecoder && this.accessTokenDecoder.decode) {
+      return this.accessTokenDecoder.decode(this.tokens.access)
+    }
+  }
+
+  get accessToken(): string | undefined {
     return this.tokens && this.tokens.access ? this.tokens.access.value : undefined
   }
 
-  get refreshToken (): string | undefined {
+  get refreshToken(): string | undefined {
     return this.tokens && this.tokens.refresh ? this.tokens.refresh.value : undefined
   }
 
-  isSaveCredentials (): boolean {
+  isSaveCredentials(): boolean {
     return this.saveCredentials
   }
 
-  isAuthenticated (): boolean {
+  isAuthenticated(): boolean {
     return !!this.tokens
   }
 
-  async login (credentials: C, saveCredentials?: boolean): Promise<R> {
+  async login(credentials: C, saveCredentials?: boolean): Promise<R> {
     const serverConfiguration = this.serverConfiguration
-    const request = this.serverAdapter.asLoginRequest(serverConfiguration.loginEndpoint, credentials)
+    const request = this.serverAdapter.asLoginRequest(
+      serverConfiguration.loginEndpoint,
+      credentials
+    )
     const response = await this.clientAdapter.login(request)
     const tokens = this.serverAdapter.getResponseTokens(response)
     if (saveCredentials !== undefined) {
@@ -132,12 +143,15 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     return response
   }
 
-  async renew (): Promise<R | void> {
+  async renew(): Promise<R | void> {
     if (this.tokens && this.serverConfiguration.renewEndpoint) {
       if (!this.renewRunning) {
         try {
           this.renewRunning = true
-          const request = this.serverAdapter.asRenewRequest(this.serverConfiguration.renewEndpoint, this.tokens)
+          const request = this.serverAdapter.asRenewRequest(
+            this.serverConfiguration.renewEndpoint,
+            this.tokens
+          )
           const response = await this.clientAdapter.renew(request)
           const tokens = this.serverAdapter.getResponseTokens(response)
           await this.setTokens(tokens)
@@ -164,12 +178,15 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
   }
 
-  async logout (): Promise<R | void> {
+  async logout(): Promise<R | void> {
     if (this.tokens) {
       let response
       const serverConfiguration = this.serverConfiguration
       if (serverConfiguration.logoutEndpoint) {
-        const request = this.serverAdapter.asLogoutRequest(serverConfiguration.logoutEndpoint, this.tokens)
+        const request = this.serverAdapter.asLogoutRequest(
+          serverConfiguration.logoutEndpoint,
+          this.tokens
+        )
         response = await this.clientAdapter.logout(request)
       }
       await this.unsetTokens()
@@ -180,37 +197,41 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
   }
 
-  private initClientAdapter () {
+  private initClientAdapter() {
     this.interceptors.push(this.clientAdapter.setupRequestInterceptor(this))
     this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
   }
 
-  private isLoginRequest (request: Request) {
+  private isLoginRequest(request: Request) {
     const serverConfiguration = this.serverConfiguration
-    if (serverConfiguration.loginEndpoint &&
+    if (
+      serverConfiguration.loginEndpoint &&
       serverConfiguration.loginEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
-      serverConfiguration.loginEndpoint.url === request.url) {
+      serverConfiguration.loginEndpoint.url === request.url
+    ) {
       return true
     }
     return false
   }
 
-  private isRenewRequest (request: Request) {
+  private isRenewRequest(request: Request) {
     const serverConfiguration = this.serverConfiguration
-    if (serverConfiguration.renewEndpoint &&
+    if (
+      serverConfiguration.renewEndpoint &&
       serverConfiguration.renewEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
-      serverConfiguration.renewEndpoint.url === request.url) {
+      serverConfiguration.renewEndpoint.url === request.url
+    ) {
       return true
     }
     return false
   }
 
-  private async expired () {
+  private async expired() {
     await this.unsetTokens()
     this.listeners.forEach(l => l.expired && l.expired())
   }
 
-  private async unsetTokens () {
+  private async unsetTokens() {
     this.tokens = undefined
     if (this.persistentTokenStorage) {
       await this.persistentTokenStorage.clear()
@@ -221,7 +242,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged())
   }
 
-  private async setTokens (tokens: Tokens) {
+  private async setTokens(tokens: Tokens) {
     if (this.tokenStorage) {
       await this.tokenStorage.store(tokens)
     }
@@ -236,12 +257,18 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
   }
 
-  async interceptRequest (request: Request) {
+  async interceptRequest(request: Request) {
     let tokens = this.getTokens()
     const isLoginRequest = this.isLoginRequest(request)
     if (tokens && tokens.access && !isLoginRequest) {
       const isRenewRequest = this.isRenewRequest(request)
-      if (tokens.refresh && !isRenewRequest && this.accessTokenDecoder && this.accessTokenDecoder.isExpired(tokens.access)) {
+      if (
+        tokens.refresh &&
+        !isRenewRequest &&
+        this.accessTokenDecoder &&
+        this.accessTokenDecoder.isExpired &&
+        this.accessTokenDecoder.isExpired(tokens.access)
+      ) {
         try {
           await this.renew()
         } catch (err) {
@@ -256,7 +283,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     return false
   }
 
-  async interceptResponse (request: Request, response: Response) {
+  async interceptResponse(request: Request, response: Response) {
     const tokens = this.getTokens()
     const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
 

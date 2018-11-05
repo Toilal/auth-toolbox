@@ -3,6 +3,7 @@ import AxiosAdapter from '../src/client-adapter/axios-adapter'
 import axios from 'axios'
 import OpenidConnectAdapter, { LoginResponse } from '../src/server-adapter/openid-connect-adapter'
 import MockAdapter from 'axios-mock-adapter'
+import JwtTokenDecoder from '../src/token-decoder/jwt-token-decoder'
 
 describe('Auth', () => {
   beforeEach(() => {
@@ -99,7 +100,14 @@ describe('Auth', () => {
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, undefined, undefined, null)
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      undefined,
+      null
+    )
     await auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
@@ -195,6 +203,83 @@ describe('Auth', () => {
 
     expect(auth.accessToken).toEqual('accessTokenValue')
     expect(auth.refreshToken).toEqual('refreshTokenValue')
+
+    return null
+  })
+
+  it('decodes accessToken with defined tokenDecoder.decode', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const accessToken =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', accessToken)
+
+    const tokenDecoder = new JwtTokenDecoder()
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+    await auth.loadTokensFromStorage()
+
+    const decodedToken = auth.decodeAccessToken()
+    expect(decodedToken).toEqual({
+      iss: 'Jwt Toolbox',
+      iat: 133713311,
+      exp: 133713371,
+      aud: 'jwt-toolbox',
+      sub: 'jwt-toolbox'
+    })
+
+    return null
+  })
+
+  it('does not decode accessToken with undefined tokenDecoder.decode', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const accessToken =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', accessToken)
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+    await auth.loadTokensFromStorage()
+
+    const decodedToken = auth.decodeAccessToken()
+    expect(decodedToken).toBeUndefined()
+
+    return null
+  })
+
+  it('does not decode accessToken with null tokenDecoder', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const accessToken =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', accessToken)
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null)
+    await auth.loadTokensFromStorage()
+
+    const decodedToken = auth.decodeAccessToken()
+    expect(decodedToken).toBeUndefined()
 
     return null
   })
@@ -642,22 +727,28 @@ describe('Auth', () => {
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
-    axiosMock.onGet('custom').reply((config) => {
+    axiosMock.onGet('custom').reply(config => {
       if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
-        return [401, {
-          error: 'invalid_token'
-        }]
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
       }
     })
 
-    axiosMock.onPost('login').reply((config) => {
+    axiosMock.onPost('login').reply(config => {
       if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
-        return [200, {
-          access_token: 'accessTokenValue',
-          refresh_token: 'refreshTokenValue'
-        } as LoginResponse]
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
       } else {
         return [401]
       }
@@ -675,7 +766,7 @@ describe('Auth', () => {
     }
 
     const tokenDecoder: TokenDecoder = {
-      isExpired (token: Token) {
+      isExpired(token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
@@ -693,22 +784,28 @@ describe('Auth', () => {
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
-    axiosMock.onGet('custom').reply((config) => {
+    axiosMock.onGet('custom').reply(config => {
       if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
-        return [401, {
-          error: 'invalid_token'
-        }]
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
       }
     })
 
-    axiosMock.onPost('login').reply((config) => {
+    axiosMock.onPost('login').reply(config => {
       if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
-        return [200, {
-          access_token: 'accessTokenValue',
-          refresh_token: 'refreshTokenValue'
-        } as LoginResponse]
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
       } else {
         return [401]
       }
@@ -725,7 +822,7 @@ describe('Auth', () => {
     }
 
     const tokenDecoder: TokenDecoder = {
-      isExpired (token: Token) {
+      isExpired(token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
@@ -749,22 +846,28 @@ describe('Auth', () => {
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
-    axiosMock.onGet('custom').reply((config) => {
+    axiosMock.onGet('custom').reply(config => {
       if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
-        return [401, {
-          error: 'invalid_token'
-        }]
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
       }
     })
 
-    axiosMock.onPost('login').reply((config) => {
+    axiosMock.onPost('login').reply(config => {
       if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
-        return [200, {
-          access_token: 'accessTokenValue',
-          refresh_token: 'refreshTokenValue'
-        } as LoginResponse]
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
       } else {
         return [401]
       }
@@ -796,22 +899,28 @@ describe('Auth', () => {
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
-    axiosMock.onGet('custom').reply((config) => {
+    axiosMock.onGet('custom').reply(config => {
       if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
-        return [401, {
-          error: 'invalid_token'
-        }]
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
       }
     })
 
-    axiosMock.onPost('login').reply((config) => {
+    axiosMock.onPost('login').reply(config => {
       if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
-        return [200, {
-          access_token: 'accessTokenValue',
-          refresh_token: 'refreshTokenValue'
-        } as LoginResponse]
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
       } else {
         return [401]
       }
@@ -832,7 +941,6 @@ describe('Auth', () => {
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
-
     try {
       await axiosInstance.get('custom')
     } catch (e) {
@@ -849,22 +957,28 @@ describe('Auth', () => {
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
-    axiosMock.onGet('custom').reply((config) => {
+    axiosMock.onGet('custom').reply(config => {
       if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
-        return [401, {
-          error: 'invalid_token'
-        }]
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
       }
     })
 
-    axiosMock.onPost('login').reply((config) => {
+    axiosMock.onPost('login').reply(config => {
       if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
-        return [200, {
-          access_token: 'accessTokenValue',
-          refresh_token: 'refreshTokenValue'
-        } as LoginResponse]
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
       } else {
         return [401]
       }

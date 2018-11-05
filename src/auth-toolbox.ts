@@ -1,31 +1,33 @@
 import Auth from './auth'
 
 export interface IAuth<C, R> {
-  loadTokensFromStorage (): Promise<Tokens | undefined>
+  loadTokensFromStorage(): Promise<Tokens | undefined>
 
-  release (): void
+  release(): void
 
-  login (credentials: C, saveCredentials?: boolean): Promise<R>
+  login(credentials: C, saveCredentials?: boolean): Promise<R>
 
-  logout (stop?: boolean): Promise<R | void>
+  logout(stop?: boolean): Promise<R | void>
 
-  renew (): Promise<R | void>
+  renew(): Promise<R | void>
 
-  getTokens (): Tokens | undefined
+  getTokens(): Tokens | undefined
 
-  isAuthenticated (): boolean
+  decodeAccessToken<T>(): any
 
-  addListener (...listeners: AuthListener[]): void
+  isAuthenticated(): boolean
 
-  removeListener (...listeners: AuthListener[]): void
+  addListener(...listeners: AuthListener[]): void
+
+  removeListener(...listeners: AuthListener[]): void
 }
 
 export interface RequestInterceptor {
-  interceptRequest (request: Request): boolean | Promise<boolean>
+  interceptRequest(request: Request): boolean | Promise<boolean>
 }
 
 export interface ResponseInterceptor {
-  interceptResponse (request: Request, response: Response): boolean | Promise<boolean>
+  interceptResponse(request: Request, response: Response): boolean | Promise<boolean>
 }
 
 export interface Request extends ServerEndpoint {
@@ -40,35 +42,35 @@ export interface Response {
 }
 
 export interface ClientAdapter<R> {
-  login (request: Request): Promise<R>
+  login(request: Request): Promise<R>
 
-  renew (request: Request): Promise<R>
+  renew(request: Request): Promise<R>
 
-  logout (request: Request): Promise<R>
+  logout(request: Request): Promise<R>
 
-  request (request: Request): Promise<R>
+  request(request: Request): Promise<R>
 
-  asResponse (clientResponse: R): Response
+  asResponse(clientResponse: R): Response
 
-  setupRequestInterceptor (interceptor: RequestInterceptor): () => void
+  setupRequestInterceptor(interceptor: RequestInterceptor): () => void
 
-  setupErrorResponseInterceptor (interceptor: ResponseInterceptor): () => void
+  setupErrorResponseInterceptor(interceptor: ResponseInterceptor): () => void
 }
 
 export interface ServerAdapter<C> {
-  asLoginRequest (loginEndpoint: ServerEndpoint, credentials: C): Request
+  asLoginRequest(loginEndpoint: ServerEndpoint, credentials: C): Request
 
-  asRenewRequest (renewEndpoint: ServerEndpoint, tokens: Tokens): Request
+  asRenewRequest(renewEndpoint: ServerEndpoint, tokens: Tokens): Request
 
-  asLogoutRequest (logoutEndpoint: ServerEndpoint, tokens: Tokens): Request
+  asLogoutRequest(logoutEndpoint: ServerEndpoint, tokens: Tokens): Request
 
-  setAccessToken (request: Request, accessToken: string | undefined): void
+  setAccessToken(request: Request, accessToken: string | undefined): void
 
-  getResponseTokens (response: Response): Tokens
+  getResponseTokens(response: Response): Tokens
 
-  accessTokenHasExpired (request: Request, response: Response): boolean
+  accessTokenHasExpired(request: Request, response: Response): boolean
 
-  refreshTokenHasExpired (request: Request, response: Response): boolean
+  refreshTokenHasExpired(request: Request, response: Response): boolean
 }
 
 export interface ServerEndpoint {
@@ -83,8 +85,8 @@ export interface ServerConfiguration {
 }
 
 export interface Token {
-  value: string,
-  expiresAt?: Date,
+  value: string
+  expiresAt?: Date
 }
 
 export interface Tokens {
@@ -93,29 +95,29 @@ export interface Tokens {
 }
 
 export interface TokenDecoder {
-  isExpired (token: Token): boolean
+  isExpired?(token: Token): boolean
 
-  decode? (token: Token): object | undefined
+  decode?(token: Token): any | undefined
 }
 
 export interface AuthListener {
-  tokensChanged? (tokens?: Tokens): any
+  tokensChanged?(tokens?: Tokens): any
 
-  expired? (): any
+  expired?(): any
 
-  login? (): any
+  login?(): any
 
-  logout? (): any
+  logout?(): any
 
-  renew? (): any
+  renew?(): any
 }
 
 export interface TokenStorage {
-  store (tokens: Tokens): void | Promise<void>
+  store(tokens: Tokens): void | Promise<void>
 
-  clear (): void | Promise<void>
+  clear(): void | Promise<void>
 
-  getTokens (): Tokens | undefined | Promise<Tokens | undefined>
+  getTokens(): Tokens | undefined | Promise<Tokens | undefined>
 }
 
 export interface UsernamePasswordCredentials {
