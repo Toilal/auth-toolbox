@@ -5,7 +5,7 @@ export interface IAuth<C, R> {
 
   release(): void
 
-  login(credentials: C, saveCredentials?: boolean): Promise<R>
+  login(credentials: C, saveTokens?: boolean): Promise<R>
 
   logout(stop?: boolean): Promise<R | void>
 
