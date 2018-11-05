@@ -271,6 +271,7 @@ describe('AxiosAdapter', () => {
 
     try {
       await axiosAdapter.request({ method: 'GET', url: 'testUrl' })
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e

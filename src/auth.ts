@@ -107,7 +107,12 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   }
 
   decodeAccessToken(): any | undefined {
-    if (this.tokens && this.accessTokenDecoder && this.accessTokenDecoder.decode) {
+    if (this.tokens) {
+      if (!this.accessTokenDecoder || !this.accessTokenDecoder.decode) {
+        throw new Error(
+          'An accessTokenDecoder supporting decode method should be defined to decode access token.'
+        )
+      }
       return this.accessTokenDecoder.decode(this.tokens.access)
     }
   }

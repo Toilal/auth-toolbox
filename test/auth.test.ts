@@ -255,8 +255,11 @@ describe('Auth', () => {
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
     await auth.loadTokensFromStorage()
 
-    const decodedToken = auth.decodeAccessToken()
-    expect(decodedToken).toBeUndefined()
+    expect(() => {
+      auth.decodeAccessToken()
+    }).toThrow(
+      'An accessTokenDecoder supporting decode method should be defined to decode access token.'
+    )
 
     return null
   })
@@ -278,8 +281,14 @@ describe('Auth', () => {
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null)
     await auth.loadTokensFromStorage()
 
-    const decodedToken = auth.decodeAccessToken()
-    expect(decodedToken).toBeUndefined()
+    try {
+      auth.decodeAccessToken()
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow()
+    }
 
     return null
   })
@@ -773,6 +782,7 @@ describe('Auth', () => {
 
     try {
       await Promise.all([auth.renew(), auth.renew(), auth.renew()])
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
@@ -899,6 +909,7 @@ describe('Auth', () => {
 
     try {
       await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
@@ -1010,6 +1021,7 @@ describe('Auth', () => {
 
     try {
       await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
@@ -1070,6 +1082,7 @@ describe('Auth', () => {
 
     try {
       await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
@@ -1110,6 +1123,7 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     try {
       await auth.renew()
+      expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
