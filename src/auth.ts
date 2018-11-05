@@ -18,7 +18,8 @@ import DefaultTokenStorage from './token-storage/default-token-storage'
 
 export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
   private serverAdapter: ServerAdapter<C>
-  private serverConfiguration: ServerConfiguration
+  private serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
+  private deferredServerConfiguration!: ServerConfiguration
   private clientAdapter: ClientAdapter<R>
   private accessTokenDecoder?: TokenDecoder | null
   private tokenStorage?: TokenStorage | null
@@ -33,7 +34,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   private renewPromises: { promise: Promise<any>; resolve: any; reject: any }[] = []
 
   constructor(
-    serverConfiguration: ServerConfiguration,
+    serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
     serverAdapter: ServerAdapter<C>,
     clientAdapter: ClientAdapter<R>,
     accessTokenDecoder: TokenDecoder | null = new DefaultTokenDecoder(),
@@ -127,8 +128,15 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     return !!this.tokens
   }
 
+  async getServerConfiguration(): Promise<ServerConfiguration> {
+    if (!this.deferredServerConfiguration) {
+      this.deferredServerConfiguration = await this.serverConfiguration
+    }
+    return this.deferredServerConfiguration
+  }
+
   async login(credentials: C, saveCredentials?: boolean): Promise<R> {
-    const serverConfiguration = this.serverConfiguration
+    const serverConfiguration = await this.getServerConfiguration()
     const request = this.serverAdapter.asLoginRequest(
       serverConfiguration.loginEndpoint,
       credentials
@@ -138,7 +146,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     if (saveCredentials !== undefined) {
       this.saveCredentials = !!saveCredentials
     }
-    if (this.saveCredentials && !this.serverConfiguration.renewEndpoint) {
+    if (this.saveCredentials && !serverConfiguration.renewEndpoint) {
       tokens.credentials = credentials
     }
     await this.setTokens(tokens)
@@ -147,17 +155,18 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   }
 
   async renew(): Promise<R | void> {
-    if (this.tokens && this.serverConfiguration) {
+    const serverConfiguration = await this.getServerConfiguration()
+    if (this.tokens && serverConfiguration) {
       if (!this.renewRunning) {
         try {
           this.renewRunning = true
           let response: R
-          if (this.serverConfiguration.renewEndpoint) {
+          if (serverConfiguration.renewEndpoint) {
             if (!this.tokens.refresh) {
               throw new Error('No refresh token available to renew')
             }
             const request = this.serverAdapter.asRenewRequest(
-              this.serverConfiguration.renewEndpoint,
+              serverConfiguration.renewEndpoint,
               this.tokens.refresh
             )
             response = await this.clientAdapter.renew(request)
@@ -199,7 +208,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   async logout(): Promise<R | void> {
     if (this.tokens) {
       let response
-      const serverConfiguration = this.serverConfiguration
+      const serverConfiguration = await this.getServerConfiguration()
       if (serverConfiguration.logoutEndpoint && this.tokens.refresh) {
         const request = this.serverAdapter.asLogoutRequest(
           serverConfiguration.logoutEndpoint,
@@ -220,8 +229,8 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
   }
 
-  private isLoginRequest(request: Request) {
-    const serverConfiguration = this.serverConfiguration
+  private async isLoginRequest(request: Request) {
+    const serverConfiguration = await this.getServerConfiguration()
     if (
       serverConfiguration.loginEndpoint &&
       serverConfiguration.loginEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
@@ -232,8 +241,8 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     return false
   }
 
-  private isRenewRequest(request: Request) {
-    const serverConfiguration = this.serverConfiguration
+  private async isRenewRequest(request: Request) {
+    const serverConfiguration = await this.getServerConfiguration()
     if (
       serverConfiguration.renewEndpoint &&
       serverConfiguration.renewEndpoint.method.toLowerCase() === request.method.toLowerCase() &&
@@ -277,9 +286,9 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
 
   async interceptRequest(request: Request) {
     let tokens = this.getTokens()
-    const isLoginRequest = this.isLoginRequest(request)
+    const isLoginRequest = await this.isLoginRequest(request)
     if (tokens && tokens.access && !isLoginRequest) {
-      const isRenewRequest = this.isRenewRequest(request)
+      const isRenewRequest = await this.isRenewRequest(request)
       if (
         tokens.refresh &&
         !isRenewRequest &&
@@ -309,7 +318,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
       return false
     }
 
-    const isRenewRequest = this.isRenewRequest(request)
+    const isRenewRequest = await this.isRenewRequest(request)
     if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
       try {
         await this.renew()

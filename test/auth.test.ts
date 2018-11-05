@@ -1164,6 +1164,51 @@ describe('Auth', () => {
     return null
   })
 
+  it('logs in, renew and logs out with async server configuration', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onPost('login').reply(200, {
+      access_token: 'accessTokenValue',
+      refresh_token: 'refreshTokenValue'
+    } as LoginResponse)
+    axiosMock.onPost('logout').reply(200)
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    } as LoginResponse)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const asyncServerConfiguration: Promise<ServerConfiguration> = new Promise(resolve => {
+      const serverConfiguration: ServerConfiguration = {
+        loginEndpoint: { method: 'post', url: 'login' },
+        renewEndpoint: { method: 'post', url: 'renew' },
+        logoutEndpoint: { method: 'post', url: 'logout' }
+      }
+      setTimeout(() => {
+        resolve(serverConfiguration)
+      }, 100)
+    })
+
+    const auth = new Auth(asyncServerConfiguration, openidConnectAdapter, axiosAdapter)
+
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+    await auth.renew()
+    await auth.logout()
+
+    return null
+  })
+
   it('logs out with undefined tokens', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
