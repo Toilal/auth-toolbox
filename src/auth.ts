@@ -140,7 +140,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     return this.deferredServerConfiguration
   }
 
-  async login(credentials: C, saveCredentials?: boolean): Promise<R> {
+  async login(credentials: C, saveTokens?: boolean): Promise<R> {
     const serverConfiguration = await this.getServerConfiguration()
     const request = this.serverAdapter.asLoginRequest(
       serverConfiguration.loginEndpoint,
@@ -148,8 +148,8 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     )
     const response = await this.clientAdapter.login(request)
     const tokens = this.serverAdapter.getResponseTokens(response)
-    if (saveCredentials !== undefined) {
-      this.saveCredentials = !!saveCredentials
+    if (saveTokens !== undefined) {
+      this.saveCredentials = !!saveTokens
     }
     if (this.saveCredentials && !serverConfiguration.renewEndpoint) {
       tokens.credentials = credentials
@@ -259,8 +259,10 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   }
 
   private async expired() {
-    await this.unsetTokens()
-    this.listeners.forEach(l => l.expired && l.expired())
+    if (this.tokens) {
+      await this.unsetTokens()
+      this.listeners.forEach(l => l.expired && l.expired())
+    }
   }
 
   private async unsetTokens() {
