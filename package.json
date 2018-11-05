@@ -1,8 +1,8 @@
 {
   "name": "auth-toolbox",
   "version": "0.0.0-development",
-  "description": "",
-  "keywords": [],
+  "description": "The developer toolbox for HTTP Client Authentication.",
+  "keywords": ["authentication", "http", "rest", "jwt", "oauth", "axios", "request"],
   "main": "dist/auth-toolbox.umd.js",
   "module": "dist/lib/auth-toolbox.js",
   "typings": "dist/lib/auth-toolbox.d.ts",
