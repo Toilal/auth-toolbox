@@ -1,4 +1,4 @@
-import { Token, TokenDecoder } from '../auth-toolbox'
+import { Token, TokenDecoder } from '..'
 import DefaultTokenDecoder from './default-token-decoder'
 import { decode } from 'jsonwebtoken'
 

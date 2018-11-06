@@ -1,4 +1,4 @@
-import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../src/auth-toolbox'
+import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../src'
 import AxiosAdapter from '../src/client-adapter/axios-adapter'
 import axios from 'axios'
 import OpenidConnectAdapter, { LoginResponse } from '../src/server-adapter/openid-connect-adapter'

@@ -8,7 +8,7 @@ import {
   Token,
   Tokens,
   UsernamePasswordCredentials
-} from '../auth-toolbox'
+} from '..'
 import { stringify } from 'querystring'
 
 export interface LoginResponse {

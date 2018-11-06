@@ -1,4 +1,4 @@
-import { Tokens, TokenStorage } from '../auth-toolbox'
+import { Tokens, TokenStorage } from '..'
 
 export default class DefaultTokenStorage implements TokenStorage {
   private storage: Storage

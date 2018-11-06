@@ -12,12 +12,15 @@
     "request"
   ],
   "main": "dist/auth-toolbox.umd.js",
-  "module": "dist/lib/auth-toolbox.js",
-  "typings": "dist/lib/auth-toolbox.d.ts",
+  "module": "dist/auth-toolbox.mjs",
+  "typings": "dist/lib/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
+  "directories": {
+    "lib": "dist/lib"
+  },
   "author": "Rémi Alvergnat <toilal.dev@gmail.com>",
   "repository": {
     "type": "git",
