@@ -10,13 +10,15 @@ import {
   ServerConfiguration,
   TokenDecoder,
   Tokens,
-  TokenStorage
+  TokenStorage,
+  UsernamePasswordCredentials
 } from '.'
 
 import DefaultTokenDecoder from './token-decoder/default-token-decoder'
 import DefaultTokenStorage from './token-storage/default-token-storage'
 
-export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
+export default class Auth<C = UsernamePasswordCredentials, R = any>
+  implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
   private serverAdapter: ServerAdapter<C>
   private serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>
   private deferredServerConfiguration!: ServerConfiguration
@@ -26,7 +28,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   private persistentTokenStorage?: TokenStorage | null
   private listeners: AuthListener[] = []
 
-  private tokens?: Tokens
+  private tokens?: Tokens<C>
   private saveCredentials: boolean = false
   private interceptors: (() => void)[] = []
 
@@ -50,11 +52,11 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.initClientAdapter()
   }
 
-  public async loadTokensFromStorage(): Promise<Tokens | undefined> {
+  public async loadTokensFromStorage(): Promise<Tokens<C> | undefined> {
     if (this.tokenStorage) {
-      let tokens = await this.tokenStorage.getTokens()
+      let tokens = await this.tokenStorage.getTokens<C>()
       if (this.persistentTokenStorage) {
-        let persistentTokens = await this.persistentTokenStorage.getTokens()
+        let persistentTokens = await this.persistentTokenStorage.getTokens<C>()
         if (persistentTokens) {
           this.saveCredentials = true
         }
@@ -102,7 +104,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
   }
 
-  getTokens(): Tokens | undefined {
+  getTokens(): Tokens<C> | undefined {
     return this.tokens
   }
 
@@ -279,7 +281,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged())
   }
 
-  private async setTokensImpl(tokens: Tokens) {
+  private async setTokensImpl(tokens: Tokens<C>) {
     if (this.tokenStorage) {
       await this.tokenStorage.store(tokens)
     }
@@ -294,7 +296,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
   }
 
-  public async setTokens(tokens: Tokens | undefined | null) {
+  public async setTokens(tokens: Tokens<C> | undefined | null) {
     if (tokens) {
       await this.setTokensImpl(tokens)
     } else {

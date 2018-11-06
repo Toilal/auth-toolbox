@@ -1,7 +1,7 @@
 import Auth from './auth'
 
-export interface IAuth<C, R> {
-  loadTokensFromStorage(): Promise<Tokens | undefined>
+export interface IAuth<C = UsernamePasswordCredentials, R = any> {
+  loadTokensFromStorage(): Promise<Tokens<C> | undefined>
 
   release(): void
 
@@ -11,9 +11,9 @@ export interface IAuth<C, R> {
 
   renew(): Promise<R | void>
 
-  getTokens(): Tokens | undefined
+  getTokens(): Tokens<C> | undefined
 
-  setTokens(tokens: Tokens | undefined | null): Promise<void> | void
+  setTokens(tokens: Tokens<C> | undefined | null): Promise<void> | void
 
   decodeAccessToken(): any | undefined
 
@@ -43,7 +43,7 @@ export interface Response {
   status?: number
 }
 
-export interface ClientAdapter<R> {
+export interface ClientAdapter<R = any> {
   login(request: Request): Promise<R>
 
   renew(request: Request): Promise<R>
@@ -59,7 +59,7 @@ export interface ClientAdapter<R> {
   setupErrorResponseInterceptor(interceptor: ResponseInterceptor): () => void
 }
 
-export interface ServerAdapter<C> {
+export interface ServerAdapter<C = UsernamePasswordCredentials> {
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: C): Request
 
   asRenewRequest(renewEndpoint: ServerEndpoint, refreshToken: Token): Request
@@ -68,7 +68,7 @@ export interface ServerAdapter<C> {
 
   setAccessToken(request: Request, accessToken: string | undefined): void
 
-  getResponseTokens(response: Response): Tokens
+  getResponseTokens(response: Response): Tokens<C>
 
   accessTokenHasExpired(request: Request, response: Response): boolean
 
@@ -91,7 +91,7 @@ export interface Token {
   expiresAt?: Date
 }
 
-export interface Tokens<C = any> {
+export interface Tokens<C = UsernamePasswordCredentials> {
   access: Token
   refresh?: Token
   credentials?: C
@@ -104,7 +104,7 @@ export interface TokenDecoder {
 }
 
 export interface AuthListener {
-  tokensChanged?(tokens?: Tokens): any
+  tokensChanged?<C = UsernamePasswordCredentials>(tokens?: Tokens<C>): any
 
   expired?(): any
 
@@ -116,11 +116,11 @@ export interface AuthListener {
 }
 
 export interface TokenStorage {
-  store(tokens: Tokens): void | Promise<void>
+  store<C>(tokens: Tokens<C>): void | Promise<void>
 
   clear(): void | Promise<void>
 
-  getTokens(): Tokens | undefined | Promise<Tokens | undefined>
+  getTokens<C>(): Tokens<C> | undefined | Promise<Tokens<C> | undefined>
 }
 
 export interface UsernamePasswordCredentials {

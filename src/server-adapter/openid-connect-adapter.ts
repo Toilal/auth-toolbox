@@ -41,7 +41,7 @@ export async function openidConnectDiscovery<R>(
   }
 }
 
-export default class OpenidConnectAdapter implements ServerAdapter<UsernamePasswordCredentials> {
+export default class OpenidConnectAdapter implements ServerAdapter {
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: UsernamePasswordCredentials): Request {
     const rawData = {
       grant_type: 'password',
@@ -78,14 +78,14 @@ export default class OpenidConnectAdapter implements ServerAdapter<UsernamePassw
     return { ...renewEndpoint, data, headers }
   }
 
-  getResponseTokens(response: Response): Tokens {
+  getResponseTokens(response: Response): Tokens<UsernamePasswordCredentials> {
     const loginResponse: LoginResponse = response.data
 
     if (!loginResponse.access_token) {
       throw new Error('No access token found in response')
     }
 
-    const tokens: Tokens = {
+    const tokens: Tokens<UsernamePasswordCredentials> = {
       access: { value: loginResponse.access_token }
     }
 

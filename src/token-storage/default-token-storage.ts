@@ -21,7 +21,7 @@ export default class DefaultTokenStorage implements TokenStorage {
     this.credentialsTokenStorageKey = credentialsTokenStorageKey
   }
 
-  store(tokens: Tokens): any {
+  store<C>(tokens: Tokens<C>): any {
     this.storage.setItem(this.accessTokenStorageKey, tokens.access.value)
 
     if (tokens.access.expiresAt) {
@@ -65,7 +65,7 @@ export default class DefaultTokenStorage implements TokenStorage {
     this.storage.removeItem(this.credentialsTokenStorageKey)
   }
 
-  getTokens(): Tokens | undefined {
+  getTokens<C>(): Tokens<C> | undefined {
     const accessTokenStr = this.storage.getItem(this.accessTokenStorageKey)
     const refreshTokenStr = this.storage.getItem(this.refreshTokenStorageKey)
     const accessTokenExpiresAtStr = this.storage.getItem(
@@ -88,7 +88,7 @@ export default class DefaultTokenStorage implements TokenStorage {
     const credentials = credentialsStr ? JSON.parse(credentialsStr) : undefined
 
     if (accessToken) {
-      const tokens: Tokens = { access: { value: accessToken, expiresAt: accessTokenExpiresAt } }
+      const tokens: Tokens<C> = { access: { value: accessToken, expiresAt: accessTokenExpiresAt } }
       if (refreshToken) {
         tokens.refresh = { value: refreshToken, expiresAt: refreshTokenExpiresAt }
       }
