@@ -71,9 +71,9 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
       }
 
       if (!tokens) {
-        await this.unsetTokens()
+        await this.unsetTokensImpl()
       } else {
-        await this.setTokens(tokens)
+        await this.setTokensImpl(tokens)
       }
 
       return tokens
@@ -154,7 +154,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     if (this.saveCredentials && !serverConfiguration.renewEndpoint) {
       tokens.credentials = credentials
     }
-    await this.setTokens(tokens)
+    await this.setTokensImpl(tokens)
     this.listeners.forEach(l => l.login && l.login())
     return response
   }
@@ -186,7 +186,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
           }
 
           const tokens = this.serverAdapter.getResponseTokens(response)
-          await this.setTokens(tokens)
+          await this.setTokensImpl(tokens)
           for (const renewTokenPromise of this.renewPromises) {
             renewTokenPromise.resolve(response)
           }
@@ -221,7 +221,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
         )
         response = await this.clientAdapter.logout(request)
       }
-      await this.unsetTokens()
+      await this.unsetTokensImpl()
       this.listeners.forEach(l => l.logout && l.logout())
       if (response) {
         return response
@@ -260,12 +260,12 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
 
   private async expired() {
     if (this.tokens) {
-      await this.unsetTokens()
+      await this.unsetTokensImpl()
       this.listeners.forEach(l => l.expired && l.expired())
     }
   }
 
-  private async unsetTokens() {
+  private async unsetTokensImpl() {
     this.tokens = undefined
     if (this.persistentTokenStorage) {
       await this.persistentTokenStorage.clear()
@@ -276,7 +276,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged())
   }
 
-  private async setTokens(tokens: Tokens) {
+  private async setTokensImpl(tokens: Tokens) {
     if (this.tokenStorage) {
       await this.tokenStorage.store(tokens)
     }
@@ -289,6 +289,14 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
     }
     this.tokens = tokens
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
+  }
+
+  public async setTokens(tokens: Tokens | undefined | null) {
+    if (tokens) {
+      await this.setTokensImpl(tokens)
+    } else {
+      await this.unsetTokensImpl()
+    }
   }
 
   async interceptRequest(request: Request) {

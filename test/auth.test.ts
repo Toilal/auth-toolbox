@@ -1288,4 +1288,49 @@ describe('Auth', () => {
 
     return null
   })
+
+  it('sends Bearer when accessToken is manually defined', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+
+    await auth.setTokens({ access: { value: 'accessTokenValue' } })
+    axiosInstance.get('custom')
+
+    await auth.setTokens(null)
+    try {
+      axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow()
+    }
+
+    return null
+  })
 })

@@ -13,6 +13,8 @@ export interface IAuth<C, R> {
 
   getTokens(): Tokens | undefined
 
+  setTokens(tokens: Tokens | undefined | null): Promise<void> | void
+
   decodeAccessToken(): any | undefined
 
   isAuthenticated(): boolean
