@@ -141,6 +141,12 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
   }
 
   async login(credentials: C, saveTokens?: boolean): Promise<R> {
+    const response = await this.loginImpl(credentials, saveTokens)
+    this.listeners.forEach(l => l.login && l.login())
+    return response
+  }
+
+  private async loginImpl(credentials: C, saveTokens?: boolean): Promise<R> {
     const serverConfiguration = await this.getServerConfiguration()
     const request = this.serverAdapter.asLoginRequest(
       serverConfiguration.loginEndpoint,
@@ -155,7 +161,6 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
       tokens.credentials = credentials
     }
     await this.setTokensImpl(tokens)
-    this.listeners.forEach(l => l.login && l.login())
     return response
   }
 
@@ -182,7 +187,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
                   'saveCredentials should be true on login to allow renew method without renewEndpoint and refresh token.'
               )
             }
-            response = await this.login(this.tokens.credentials)
+            response = await this.loginImpl(this.tokens.credentials)
           }
 
           const tokens = this.serverAdapter.getResponseTokens(response)
@@ -223,9 +228,7 @@ export default class Auth<C, R> implements IAuth<C, R>, RequestInterceptor, Resp
       }
       await this.unsetTokensImpl()
       this.listeners.forEach(l => l.logout && l.logout())
-      if (response) {
-        return response
-      }
+      return response
     }
   }
 
