@@ -15,15 +15,15 @@ export class TokenStorageAsyncAdapter implements TokenStorageAsync {
   }
 
   async clear(): Promise<void> {
-    return await this.tokenStorage.clear()
+    return this.tokenStorage.clear()
   }
 
   async getTokens<C>(): Promise<Tokens<C> | undefined> {
-    return await this.tokenStorage.getTokens<C>()
+    return this.tokenStorage.getTokens<C>()
   }
 
   async store<C>(tokens: Tokens<C>): Promise<void> {
-    return await this.tokenStorage.store<C>(tokens)
+    return this.tokenStorage.store<C>(tokens)
   }
 }
 
