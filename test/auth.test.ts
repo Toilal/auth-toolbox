@@ -34,7 +34,6 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
@@ -44,6 +43,25 @@ describe('Auth', () => {
     }
 
     expect(localStorage.getItem('auth.accessToken')).toBe(null)
+  })
+
+  it('does not load token from sessionStorage when loadTokensFromStorage is false', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      loadTokensFromStorage: false
+    })
+
+    const token = auth.getTokens()
+    expect(token).toBeUndefined()
   })
 
   it('loads tokens from localStorage', () => {
@@ -441,24 +459,27 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-
     const listener: AuthListener = {
+      initialized: jest.fn(),
       login: jest.fn(),
       renew: jest.fn(),
       logout: jest.fn(),
       expired: jest.fn(),
       tokensChanged: jest.fn()
     }
-    auth.addListener(listener)
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      listeners: [listener]
+    })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     expect(auth.isAuthenticated())
 
     expect(listener.login).toHaveBeenCalledTimes(1)
     expect(listener.login).toHaveBeenLastCalledWith()
-    expect(listener.tokensChanged).toHaveBeenCalledTimes(1)
-    expect(listener.tokensChanged).toHaveBeenLastCalledWith({
+    expect(listener.tokensChanged).toHaveBeenCalledTimes(2)
+    expect(listener.tokensChanged).toHaveBeenNthCalledWith(1)
+    expect(listener.tokensChanged).toHaveBeenNthCalledWith(2, {
       access: { value: 'accessTokenValue' },
       refresh: { value: 'refreshTokenValue' }
     })
@@ -467,8 +488,9 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     expect(listener.login).toHaveBeenCalledTimes(1)
     expect(listener.login).toHaveBeenLastCalledWith()
-    expect(listener.tokensChanged).toHaveBeenCalledTimes(1)
-    expect(listener.tokensChanged).toHaveBeenLastCalledWith({
+    expect(listener.tokensChanged).toHaveBeenCalledTimes(2)
+    expect(listener.tokensChanged).toHaveBeenNthCalledWith(1)
+    expect(listener.tokensChanged).toHaveBeenNthCalledWith(2, {
       access: { value: 'accessTokenValue' },
       refresh: { value: 'refreshTokenValue' }
     })
@@ -1214,6 +1236,67 @@ describe('Auth', () => {
     return null
   })
 
+  it('does not intercept if clientInterceptors is false', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' },
+      renewEndpoint: { method: 'POST', url: 'renew' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      clientInterceptors: false
+    })
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
   it('logs in, renew and logs out with undefined TokenStorage and undefined renewEndpoint', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
@@ -1236,15 +1319,6 @@ describe('Auth', () => {
       tokenStorage: null,
       persistentTokenStorage: null
     })
-
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     try {
@@ -1295,15 +1369,6 @@ describe('Auth', () => {
       persistentTokenStorage: null
     })
 
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
-
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
@@ -1340,15 +1405,6 @@ describe('Auth', () => {
 
     const auth = new Auth(asyncServerConfiguration, openidConnectAdapter, axiosAdapter)
 
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
-
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
@@ -1378,10 +1434,6 @@ describe('Auth', () => {
 
     const auth = new Auth(asyncServerConfiguration, openidConnectAdapter, axiosAdapter)
     const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
       tokensChanged: jest.fn()
     }
     auth.addListener(listener)
@@ -1414,15 +1466,6 @@ describe('Auth', () => {
       persistentTokenStorage: null
     })
 
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
-
     await auth.logout()
 
     return null
@@ -1451,15 +1494,6 @@ describe('Auth', () => {
       persistentTokenStorage: null
     })
 
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
-
     await auth.renew()
 
     return null
@@ -1484,15 +1518,6 @@ describe('Auth', () => {
     }
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
 
     await auth.setTokensAsync({ access: { value: 'accessTokenValue' } })
     try {
@@ -1535,15 +1560,6 @@ describe('Auth', () => {
     }
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-
-    const listener: AuthListener = {
-      login: jest.fn(),
-      renew: jest.fn(),
-      logout: jest.fn(),
-      expired: jest.fn(),
-      tokensChanged: jest.fn()
-    }
-    auth.addListener(listener)
 
     auth.setTokens({ access: { value: 'accessTokenValue' } })
     try {
@@ -1588,7 +1604,8 @@ describe('Auth', () => {
       false
     )
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
-      persistentTokenStorage
+      persistentTokenStorage,
+      loadTokensFromStorage: false
     })
 
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
@@ -1618,7 +1635,10 @@ describe('Auth', () => {
     }
 
     const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, { tokenStorage })
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      tokenStorage,
+      loadTokensFromStorage: false
+    })
 
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
       'tokenStorage is async. Use setTokensAsync method instead'
@@ -1731,7 +1751,8 @@ describe('Auth', () => {
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       accessTokenDecoder: null,
       tokenStorage: null,
-      persistentTokenStorage: null
+      persistentTokenStorage: null,
+      loadTokensFromStorage: false
     })
 
     await auth.loadTokensFromStorageAsync()
@@ -1760,7 +1781,8 @@ describe('Auth', () => {
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       accessTokenDecoder: null,
-      persistentTokenStorage: null
+      persistentTokenStorage: null,
+      loadTokensFromStorage: false
     })
 
     await auth.loadTokensFromStorageAsync()

@@ -23,7 +23,8 @@ import { toTokenStorageAsync, toTokenStorageSync } from './token-storage'
 const defaultAuthOptions: AuthOptions = {
   accessTokenDecoder: new DefaultTokenDecoder(),
   tokenStorage: new DefaultTokenStorage(sessionStorage),
-  persistentTokenStorage: new DefaultTokenStorage(localStorage)
+  persistentTokenStorage: new DefaultTokenStorage(localStorage),
+  clientInterceptors: true
 }
 
 export default class Auth<C = UsernamePasswordCredentials, R = any>
@@ -66,7 +67,51 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     this.persistentTokenStorage = toTokenStorageSync(effectiveOptions.persistentTokenStorage)
     this.persistentTokenStorageAsync = toTokenStorageAsync(effectiveOptions.persistentTokenStorage)
 
-    this.initClientAdapter()
+    if (effectiveOptions.listeners) {
+      this.addListener(...effectiveOptions.listeners)
+    }
+
+    if (effectiveOptions.clientInterceptors) {
+      this.initClientAdapter()
+    }
+
+    if (
+      effectiveOptions.loadTokensFromStorage === undefined ||
+      effectiveOptions.loadTokensFromStorage === null
+    ) {
+      // If undefined or null, tokens will be loaded only if storage supports sync loading.
+      effectiveOptions.loadTokensFromStorage = this.storageSync
+    }
+
+    if (effectiveOptions.loadTokensFromStorage) {
+      if (this.storageSync) {
+        this.loadTokensFromStorage()
+        this.listeners.forEach(l => l.initialized && l.initialized(true))
+      } else {
+        this.loadTokensFromStorageAsync()
+          .then(() => {
+            this.listeners.forEach(l => l.initialized && l.initialized(true))
+          })
+          .catch(e => {
+            console.error('An error has occured while loading tokens from async storage.')
+            console.error(e)
+          })
+      }
+    } else {
+      this.listeners.forEach(l => l.initialized && l.initialized(false))
+    }
+  }
+
+  get storageSync(): boolean {
+    if (this.tokenStorageAsync && !this.tokenStorage) {
+      return false
+    }
+
+    if (this.persistentTokenStorageAsync && !this.persistentTokenStorage) {
+      return false
+    }
+
+    return true
   }
 
   public async loadTokensFromStorageAsync(): Promise<Tokens<C> | undefined> {
@@ -94,7 +139,6 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
       } else {
         await this.setTokensImplAsync(tokens)
       }
-
       return tokens
     }
   }

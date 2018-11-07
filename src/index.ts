@@ -4,10 +4,15 @@ export interface AuthOptions {
   accessTokenDecoder?: TokenDecoder | null
   tokenStorage?: TokenStorage | TokenStorageAsync | null
   persistentTokenStorage?: TokenStorage | TokenStorageAsync | null
+  listeners?: AuthListener[] | null
+  loadTokensFromStorage?: boolean | null
+  clientInterceptors?: boolean
 }
 
 export interface IAuth<C = UsernamePasswordCredentials, R = any> {
   usePersistentStorage: boolean
+
+  readonly storageSync: boolean
 
   loadTokensFromStorage(): Tokens<C> | undefined
 
@@ -116,6 +121,8 @@ export interface TokenDecoder {
 }
 
 export interface AuthListener {
+  initialized?(storageLoaded?: boolean): any
+
   tokensChanged?<C = UsernamePasswordCredentials>(tokens?: Tokens<C>): any
 
   expired?(): any
