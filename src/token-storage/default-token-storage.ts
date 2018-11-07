@@ -1,6 +1,8 @@
 import { Tokens, TokenStorage } from '..'
 
 export default class DefaultTokenStorage implements TokenStorage {
+  readonly async: false = false
+
   private storage: Storage
   private accessTokenStorageKey: string
   private refreshTokenStorageKey: string

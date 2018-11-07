@@ -4,6 +4,8 @@ import axios from 'axios'
 import OpenidConnectAdapter, { LoginResponse } from '../src/server-adapter/openid-connect-adapter'
 import MockAdapter from 'axios-mock-adapter'
 import JwtTokenDecoder from '../src/token-decoder/jwt-token-decoder'
+import DefaultTokenStorage from '../src/token-storage/default-token-storage'
+import { TokenStorageAsyncAdapter } from '../src/token-storage'
 
 describe('Auth', () => {
   beforeEach(() => {
@@ -20,7 +22,7 @@ describe('Auth', () => {
     expect(Auth).toBeDefined()
   })
 
-  it('loads token from sessionStorage', async () => {
+  it('loads token from sessionStorage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -32,7 +34,7 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
@@ -42,11 +44,9 @@ describe('Auth', () => {
     }
 
     expect(localStorage.getItem('auth.accessToken')).toBe(null)
-
-    return null
   })
 
-  it('loads tokens from localStorage', async () => {
+  it('loads tokens from localStorage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -58,7 +58,7 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
@@ -68,11 +68,107 @@ describe('Auth', () => {
     }
 
     expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
-
-    return null
   })
 
-  it('loads tokens from storage with undefined TokenStorage', async () => {
+  it('loads tokens from sync localStorage (async)', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    localStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+    await auth.loadTokensFromStorageAsync()
+
+    const token = auth.getTokens()
+    expect(token).toBeDefined()
+    if (token) {
+      expect(token.access.value).toBe('accessTokenValue')
+      expect(token.refresh).toBeUndefined()
+    }
+
+    expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
+  })
+
+  it('loads tokens from async localStorage (async)', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(sessionStorage),
+      false
+    )
+    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+
+    localStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      tokenStorageAdapter,
+      persistentTokenStorageAdapter
+    )
+    await auth.loadTokensFromStorageAsync()
+
+    const token = auth.getTokens()
+    expect(token).toBeDefined()
+    if (token) {
+      expect(token.access.value).toBe('accessTokenValue')
+      expect(token.refresh).toBeUndefined()
+    }
+
+    expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
+  })
+
+  it('fails to load tokens from async localStorage (sync)', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(sessionStorage),
+      false
+    )
+    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+
+    localStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      tokenStorageAdapter,
+      persistentTokenStorageAdapter
+    )
+
+    expect(() => auth.loadTokensFromStorage()).toThrow(
+      'tokenStorage is async. Use loadTokensFromStorageAsync method instead'
+    )
+  })
+
+  it('loads tokens from storage with undefined TokenStorage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -84,12 +180,10 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
-    await auth.loadTokensFromStorage()
-
-    return null
+    auth.loadTokensFromStorage()
   })
 
-  it('loads tokens from storage with defined SessionStorageAdapter', async () => {
+  it('loads tokens from storage with defined SessionStorageAdapter', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -108,17 +202,15 @@ describe('Auth', () => {
       undefined,
       null
     )
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toBeUndefined()
 
     expect(sessionStorage.getItem('auth.accessToken')).toBeNull()
-
-    return null
   })
 
-  it('updates localStorage from sessionStorage when loading tokens from storage and ', async () => {
+  it('updates localStorage from sessionStorage when loading tokens from storage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -131,18 +223,16 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValueDummy')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    const r = await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toEqual({ access: { value: 'accessTokenValue' } })
 
     expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
     expect(localStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
-
-    return null
   })
 
-  it('loads tokens from storage when localStorage is empty', async () => {
+  it('loads tokens from storage when localStorage is empty', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -154,18 +244,16 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toEqual({ access: { value: 'accessTokenValue' } })
 
     expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
     expect(localStorage.getItem('auth.accessToken')).toBeNull()
-
-    return null
   })
 
-  it('loads tokens from storage when sessionStorage and localStorage are empty', async () => {
+  it('loads tokens from storage when sessionStorage and localStorage are empty', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -175,18 +263,16 @@ describe('Auth', () => {
     }
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
     expect(token).toBeUndefined()
 
     expect(sessionStorage.getItem('auth.accessToken')).toBeNull()
     expect(localStorage.getItem('auth.accessToken')).toBeNull()
-
-    return null
   })
 
-  it('accessToken and refreshToken are defined after loading tokens from storage', async () => {
+  it('accessToken and refreshToken are defined after loading tokens from storage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -199,15 +285,13 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     expect(auth.accessToken).toEqual('accessTokenValue')
     expect(auth.refreshToken).toEqual('refreshTokenValue')
-
-    return null
   })
 
-  it('decodes accessToken with defined tokenDecoder.decode', async () => {
+  it('decodes accessToken with defined tokenDecoder.decode', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -224,7 +308,7 @@ describe('Auth', () => {
     const tokenDecoder = new JwtTokenDecoder()
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     const decodedToken = auth.decodeAccessToken()
     expect(decodedToken).toEqual({
@@ -234,11 +318,9 @@ describe('Auth', () => {
       aud: 'jwt-toolbox',
       sub: 'jwt-toolbox'
     })
-
-    return null
   })
 
-  it('does not decode accessToken with undefined tokenDecoder.decode', async () => {
+  it('does not decode accessToken with undefined tokenDecoder.decode', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -253,18 +335,16 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.accessToken', accessToken)
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     expect(() => {
       auth.decodeAccessToken()
     }).toThrow(
       'An accessTokenDecoder supporting decode method should be defined to decode access token.'
     )
-
-    return null
   })
 
-  it('does not decode accessToken with null tokenDecoder', async () => {
+  it('does not decode accessToken with null tokenDecoder', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -279,7 +359,7 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.accessToken', accessToken)
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     try {
       auth.decodeAccessToken()
@@ -287,10 +367,8 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow('')
     }
-
-    return null
   })
 
   it('is authenticated after loading tokens from storage', async () => {
@@ -306,7 +384,7 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
     expect(auth.isAuthenticated()).toBeTruthy()
 
@@ -317,7 +395,7 @@ describe('Auth', () => {
     return null
   })
 
-  it('isSaveCredentials is true when localStorage contains token values and loading tokens from storage', async () => {
+  it('isSaveCredentials is true when localStorage contains token values and loading tokens from storage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -330,14 +408,12 @@ describe('Auth', () => {
     localStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
-    expect(auth.isSaveCredentials()).toBeTruthy()
-
-    return null
+    expect(auth.usePersistentStorage).toBeTruthy()
   })
 
-  it('isSaveCredentials is false when localStorage is empty and loading token from storage', async () => {
+  it('isSaveCredentials is false when localStorage is empty and loading token from storage', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -350,11 +426,9 @@ describe('Auth', () => {
     sessionStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
 
-    expect(auth.isSaveCredentials()).toBeFalsy()
-
-    return null
+    expect(auth.usePersistentStorage).toBeFalsy()
   })
 
   it('logs in', async () => {
@@ -436,10 +510,11 @@ describe('Auth', () => {
       tokensChanged: jest.fn()
     }
     auth.addListener(listener)
-    expect(auth.isSaveCredentials()).toBeFalsy()
+    expect(auth.usePersistentStorage).toBeFalsy()
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
-    expect(auth.isSaveCredentials()).toBeTruthy()
+    auth.usePersistentStorage = true
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+    expect(auth.usePersistentStorage).toBeTruthy()
     let tokens = auth.getTokens()
     expect(tokens).toBeDefined()
     if (tokens) {
@@ -447,8 +522,9 @@ describe('Auth', () => {
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, false)
-    expect(auth.isSaveCredentials()).toBeFalsy()
+    auth.usePersistentStorage = false
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+    expect(auth.usePersistentStorage).toBeFalsy()
 
     tokens = auth.getTokens()
     expect(tokens).toBeDefined()
@@ -485,10 +561,9 @@ describe('Auth', () => {
       tokensChanged: jest.fn()
     }
     auth.addListener(listener)
-    expect(auth.isSaveCredentials()).toBeFalsy()
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
-    expect(auth.isSaveCredentials()).toBeTruthy()
+    auth.usePersistentStorage = true
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
     let tokens = auth.getTokens()
     expect(tokens).toBeDefined()
     if (tokens) {
@@ -500,8 +575,8 @@ describe('Auth', () => {
       password: 'testPassword'
     })
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, false)
-    expect(auth.isSaveCredentials()).toBeFalsy()
+    auth.usePersistentStorage = false
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
 
     tokens = auth.getTokens()
     expect(tokens).toBeDefined()
@@ -532,7 +607,7 @@ describe('Auth', () => {
     localStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
     expect(auth.isAuthenticated()).toBeTruthy()
 
     const listener: AuthListener = {
@@ -555,7 +630,8 @@ describe('Auth', () => {
     expect(listener.login).not.toHaveBeenLastCalledWith()
     auth.removeListener(listener)
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
+    auth.usePersistentStorage = true
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
 
     await auth.logout()
     expect(listener.login).not.toHaveBeenCalled()
@@ -589,7 +665,7 @@ describe('Auth', () => {
     localStorage.setItem('auth.refreshToken', 'refreshTokenValue')
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
-    await auth.loadTokensFromStorage()
+    auth.loadTokensFromStorage()
     expect(auth.isAuthenticated()).toBeTruthy()
 
     const listener: AuthListener = {
@@ -612,7 +688,8 @@ describe('Auth', () => {
     expect(listener.login).not.toHaveBeenLastCalledWith()
     auth.removeListener(listener)
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
+    auth.usePersistentStorage = true
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
 
     await auth.logout()
     expect(listener.login).not.toHaveBeenCalled()
@@ -678,6 +755,38 @@ describe('Auth', () => {
     expect(listener.renew).toHaveBeenCalledTimes(1)
     expect(listener.logout).not.toHaveBeenCalled()
     expect(listener.expired).not.toHaveBeenCalled()
+
+    return null
+  })
+
+  it('fails to renew with defined renewEndpoint and missing refresh_token in response', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onPost('login').reply(200, {
+      access_token: 'accessTokenValue'
+    } as LoginResponse)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' },
+      renewEndpoint: { method: 'post', url: 'renew' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+    expect(auth.isAuthenticated())
+
+    try {
+      await auth.renew()
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow('No refresh token available to renew')
+    }
 
     return null
   })
@@ -786,7 +895,7 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow('')
     }
 
     expect(listener.login).toHaveBeenCalledTimes(1)
@@ -851,7 +960,13 @@ describe('Auth', () => {
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
-    await axiosInstance.get('custom')
+    try {
+      await axiosInstance.get('custom')
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).not.toThrow()
+    }
 
     return null
   })
@@ -913,7 +1028,7 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow(/Request failed with status code 400.*/)
     }
 
     return null
@@ -967,7 +1082,13 @@ describe('Auth', () => {
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
-    await axiosInstance.get('custom')
+    try {
+      await axiosInstance.get('custom')
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).not.toThrow()
+    }
 
     return null
   })
@@ -1025,7 +1146,7 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow(/Request failed with status code 401.*/)
     }
 
     return null
@@ -1086,7 +1207,7 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow(/Request failed with status code 401.*/)
     }
 
     return null
@@ -1127,11 +1248,14 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow(
+        'Credentials are not available. usePersistentStorage should be true to allow renew method without renewEndpoint and refresh token.'
+      )
     }
     await auth.logout()
 
-    await auth.login({ username: 'testUsername', password: 'testPassword' }, true)
+    auth.usePersistentStorage = true
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
 
@@ -1223,6 +1347,41 @@ describe('Auth', () => {
     return null
   })
 
+  it('calls tokensChanged callback after loading of tokenStorage', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const asyncServerConfiguration: Promise<ServerConfiguration> = new Promise(resolve => {
+      const serverConfiguration: ServerConfiguration = {
+        loginEndpoint: { method: 'post', url: 'login' },
+        renewEndpoint: { method: 'post', url: 'renew' },
+        logoutEndpoint: { method: 'post', url: 'logout' }
+      }
+      setTimeout(() => {
+        resolve(serverConfiguration)
+      }, 100)
+    })
+
+    sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(asyncServerConfiguration, openidConnectAdapter, axiosAdapter)
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+
+    auth.loadTokensFromStorage()
+    expect(listener.tokensChanged).toHaveBeenCalledTimes(1)
+    expect(auth.getTokens()).toEqual({ access: { value: 'accessTokenValue' } })
+  })
+
   it('logs out with undefined tokens', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
@@ -1289,7 +1448,7 @@ describe('Auth', () => {
     return null
   })
 
-  it('sends Bearer when accessToken is manually defined', async () => {
+  it('sends Bearer when accessToken is manually defined (async)', async () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -1318,19 +1477,306 @@ describe('Auth', () => {
     }
     auth.addListener(listener)
 
-    await auth.setTokens({ access: { value: 'accessTokenValue' } })
-    axiosInstance.get('custom')
-
-    await auth.setTokens(null)
+    await auth.setTokensAsync({ access: { value: 'accessTokenValue' } })
     try {
-      axiosInstance.get('custom')
+      await axiosInstance.get('custom')
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).not.toThrow()
+    }
+
+    await auth.setTokensAsync(null)
+    try {
+      await axiosInstance.get('custom')
       expect(false).toBeTruthy()
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow()
+      }).toThrow(/Request failed with status code 401.*/)
     }
 
     return null
+  })
+
+  it('sends Bearer when accessToken is manually defined (sync)', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+
+    const listener: AuthListener = {
+      login: jest.fn(),
+      renew: jest.fn(),
+      logout: jest.fn(),
+      expired: jest.fn(),
+      tokensChanged: jest.fn()
+    }
+    auth.addListener(listener)
+
+    auth.setTokens({ access: { value: 'accessTokenValue' } })
+    try {
+      await axiosInstance.get('custom')
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).not.toThrow()
+    }
+
+    auth.setTokens(null)
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+  })
+
+  it('fails to set token synchronously when persistentTokenStorage is async', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      undefined,
+      persistentTokenStorageAdapter
+    )
+
+    expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
+      'persistentTokenStorage is async. Use setTokensAsync method instead'
+    )
+    expect(() => auth.setTokens(null)).toThrow(
+      'persistentTokenStorage is async. Use setTokensAsync method instead'
+    )
+  })
+
+  it('fails to set token synchronously when tokenStorage is async', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      tokenStorageAdapter,
+      undefined
+    )
+
+    expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
+      'tokenStorage is async. Use setTokensAsync method instead'
+    )
+    expect(() => auth.setTokens(null)).toThrow(
+      'tokenStorage is async. Use setTokensAsync method instead'
+    )
+  })
+
+  it('fails to load token synchronously when persistentTokenStorage is async', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      undefined,
+      persistentTokenStorageAdapter
+    )
+
+    expect(() => auth.loadTokensFromStorage()).toThrow(
+      'persistentTokenStorage is async. Use loadTokensFromStorageAsync method instead'
+    )
+  })
+
+  it('fails to load tokens synchronously when tokenStorage is async', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+      new DefaultTokenStorage(localStorage),
+      false
+    )
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      undefined,
+      tokenStorageAdapter,
+      undefined
+    )
+
+    expect(() => auth.loadTokensFromStorage()).toThrow(
+      'tokenStorage is async. Use loadTokensFromStorageAsync method instead'
+    )
+  })
+
+  it('loads tokens asynchronously when tokenStorage and persistentTokenStorage are sync', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
+
+    await auth.loadTokensFromStorageAsync()
+  })
+
+  it('does not fail when loading tokens asynchronously when tokenStorage and persistentTokenStorage are null', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+
+    await auth.loadTokensFromStorageAsync()
+    expect(auth.getTokens()).toBeUndefined()
+  })
+
+  it('does not fail when loading tokens asynchronously when tokenStorage is sync and persistentTokenStorage is null', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+        return [200]
+      } else {
+        return [401]
+      }
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const auth = new Auth(
+      serverConfiguration,
+      openidConnectAdapter,
+      axiosAdapter,
+      null,
+      undefined,
+      null
+    )
+
+    await auth.loadTokensFromStorageAsync()
+    expect(() => auth.getTokens())
   })
 })

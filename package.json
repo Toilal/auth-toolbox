@@ -35,7 +35,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc && rollup -c rollup.config.js && typedoc --out docs --target es6 --theme minimal --exclude **/*.umd.ts --mode file src",
     "start": "rollup -c rollup.config.js -w",
-    "test": "jest --coverage",
+    "test": "jest --coverage --verbose",
     "test:watch": "jest --coverage --watch",
     "test:prod": "npm run lint && npm run test -- --no-cache",
     "deploy-docs": "ts-node tools/gh-pages-publish",

@@ -1,11 +1,15 @@
 import Auth from './auth'
 
 export interface IAuth<C = UsernamePasswordCredentials, R = any> {
-  loadTokensFromStorage(): Promise<Tokens<C> | undefined>
+  usePersistentStorage: boolean
+
+  loadTokensFromStorage(): Tokens<C> | undefined
+
+  loadTokensFromStorageAsync(): Promise<Tokens<C> | undefined>
 
   release(): void
 
-  login(credentials: C, saveTokens?: boolean): Promise<R>
+  login(credentials: C): Promise<R>
 
   logout(stop?: boolean): Promise<R | void>
 
@@ -13,7 +17,9 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
 
   getTokens(): Tokens<C> | undefined
 
-  setTokens(tokens: Tokens<C> | undefined | null): Promise<void> | void
+  setTokens(tokens: Tokens<C> | undefined | null): void
+
+  setTokensAsync(tokens: Tokens<C> | undefined | null): Promise<void>
 
   decodeAccessToken(): any | undefined
 
@@ -116,11 +122,25 @@ export interface AuthListener {
 }
 
 export interface TokenStorage {
-  store<C>(tokens: Tokens<C>): void | Promise<void>
+  readonly async: false
 
-  clear(): void | Promise<void>
+  store<C>(tokens: Tokens<C>): void
 
-  getTokens<C>(): Tokens<C> | undefined | Promise<Tokens<C> | undefined>
+  clear(): void
+
+  getTokens<C>(): Tokens<C> | undefined
+}
+
+export interface TokenStorageAsync {
+  readonly async: true
+
+  readonly sync?: TokenStorage
+
+  store<C>(tokens: Tokens<C>): Promise<void>
+
+  clear(): Promise<void>
+
+  getTokens<C>(): Promise<Tokens<C> | undefined>
 }
 
 export interface UsernamePasswordCredentials {
