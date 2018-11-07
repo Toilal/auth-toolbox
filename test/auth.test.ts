@@ -103,25 +103,21 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const tokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(sessionStorage),
       false
     )
-    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(localStorage),
       false
     )
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      tokenStorageAdapter,
-      persistentTokenStorageAdapter
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      tokenStorage,
+      persistentTokenStorage
+    })
     await auth.loadTokensFromStorageAsync()
 
     const token = auth.getTokens()
@@ -143,25 +139,21 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const tokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(sessionStorage),
       false
     )
-    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(localStorage),
       false
     )
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      tokenStorageAdapter,
-      persistentTokenStorageAdapter
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      tokenStorage,
+      persistentTokenStorage
+    })
 
     expect(() => auth.loadTokensFromStorage()).toThrow(
       'tokenStorage is async. Use loadTokensFromStorageAsync method instead'
@@ -179,7 +171,11 @@ describe('Auth', () => {
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
     auth.loadTokensFromStorage()
   })
 
@@ -194,14 +190,9 @@ describe('Auth', () => {
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      undefined,
-      null
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      persistentTokenStorage: null
+    })
     auth.loadTokensFromStorage()
 
     const token = auth.getTokens()
@@ -305,9 +296,11 @@ describe('Auth', () => {
 
     sessionStorage.setItem('auth.accessToken', accessToken)
 
-    const tokenDecoder = new JwtTokenDecoder()
+    const accessTokenDecoder = new JwtTokenDecoder()
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder
+    })
     auth.loadTokensFromStorage()
 
     const decodedToken = auth.decodeAccessToken()
@@ -358,7 +351,9 @@ describe('Auth', () => {
 
     sessionStorage.setItem('auth.accessToken', accessToken)
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null
+    })
     auth.loadTokensFromStorage()
 
     try {
@@ -951,12 +946,14 @@ describe('Auth', () => {
       renewEndpoint: { method: 'POST', url: 'renew' }
     }
 
-    const tokenDecoder: TokenDecoder = {
+    const accessTokenDecoder: TokenDecoder = {
       isExpired(token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder
+    })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
@@ -1013,12 +1010,14 @@ describe('Auth', () => {
       renewEndpoint: { method: 'POST', url: 'renew' }
     }
 
-    const tokenDecoder: TokenDecoder = {
+    const accessTokenDecoder: TokenDecoder = {
       isExpired(token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder
+    })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
@@ -1077,8 +1076,10 @@ describe('Auth', () => {
       renewEndpoint: { method: 'POST', url: 'renew' }
     }
 
-    const tokenDecoder = null
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+    const accessTokenDecoder = null
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder
+    })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
 
@@ -1230,7 +1231,11 @@ describe('Auth', () => {
       logoutEndpoint: { method: 'post', url: 'logout' }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
 
     const listener: AuthListener = {
       login: jest.fn(),
@@ -1284,7 +1289,11 @@ describe('Auth', () => {
       logoutEndpoint: { method: 'post', url: 'logout' }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
 
     const listener: AuthListener = {
       login: jest.fn(),
@@ -1399,7 +1408,11 @@ describe('Auth', () => {
       logoutEndpoint: { method: 'post', url: 'logout' }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
 
     const listener: AuthListener = {
       login: jest.fn(),
@@ -1432,7 +1445,11 @@ describe('Auth', () => {
       logoutEndpoint: { method: 'post', url: 'logout' }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
 
     const listener: AuthListener = {
       login: jest.fn(),
@@ -1566,18 +1583,13 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(localStorage),
       false
     )
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      undefined,
-      persistentTokenStorageAdapter
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      persistentTokenStorage
+    })
 
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
       'persistentTokenStorage is async. Use setTokensAsync method instead'
@@ -1605,18 +1617,8 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      tokenStorageAdapter,
-      undefined
-    )
+    const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, { tokenStorage })
 
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
       'tokenStorage is async. Use setTokensAsync method instead'
@@ -1644,18 +1646,13 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const persistentTokenStorageAdapter = new TokenStorageAsyncAdapter(
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(
       new DefaultTokenStorage(localStorage),
       false
     )
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      undefined,
-      persistentTokenStorageAdapter
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      persistentTokenStorage
+    })
 
     expect(() => auth.loadTokensFromStorage()).toThrow(
       'persistentTokenStorage is async. Use loadTokensFromStorageAsync method instead'
@@ -1680,18 +1677,8 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorageAdapter = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      undefined,
-      tokenStorageAdapter,
-      undefined
-    )
+    const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, { tokenStorage })
 
     expect(() => auth.loadTokensFromStorage()).toThrow(
       'tokenStorage is async. Use loadTokensFromStorageAsync method instead'
@@ -1741,7 +1728,11 @@ describe('Auth', () => {
 
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, null, null, null)
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      tokenStorage: null,
+      persistentTokenStorage: null
+    })
 
     await auth.loadTokensFromStorageAsync()
     expect(auth.getTokens()).toBeUndefined()
@@ -1767,14 +1758,10 @@ describe('Auth', () => {
 
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(
-      serverConfiguration,
-      openidConnectAdapter,
-      axiosAdapter,
-      null,
-      undefined,
-      null
-    )
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder: null,
+      persistentTokenStorage: null
+    })
 
     await auth.loadTokensFromStorageAsync()
     expect(() => auth.getTokens())

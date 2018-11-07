@@ -1,5 +1,11 @@
 import Auth from './auth'
 
+export interface AuthOptions {
+  accessTokenDecoder?: TokenDecoder | null
+  tokenStorage?: TokenStorage | TokenStorageAsync | null
+  persistentTokenStorage?: TokenStorage | TokenStorageAsync | null
+}
+
 export interface IAuth<C = UsernamePasswordCredentials, R = any> {
   usePersistentStorage: boolean
 

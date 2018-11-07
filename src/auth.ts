@@ -1,5 +1,6 @@
 import {
   AuthListener,
+  AuthOptions,
   ClientAdapter,
   IAuth,
   Request,
@@ -18,6 +19,12 @@ import {
 import DefaultTokenDecoder from './token-decoder/default-token-decoder'
 import DefaultTokenStorage from './token-storage/default-token-storage'
 import { toTokenStorageAsync, toTokenStorageSync } from './token-storage'
+
+const defaultAuthOptions: AuthOptions = {
+  accessTokenDecoder: new DefaultTokenDecoder(),
+  tokenStorage: new DefaultTokenStorage(sessionStorage),
+  persistentTokenStorage: new DefaultTokenStorage(localStorage)
+}
 
 export default class Auth<C = UsernamePasswordCredentials, R = any>
   implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
@@ -44,22 +51,20 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
     serverAdapter: ServerAdapter<C>,
     clientAdapter: ClientAdapter<R>,
-    accessTokenDecoder: TokenDecoder | null = new DefaultTokenDecoder(),
-    tokenStorage: TokenStorage | TokenStorageAsync | null = new DefaultTokenStorage(sessionStorage),
-    persistentTokenStorage: TokenStorage | TokenStorageAsync | null = new DefaultTokenStorage(
-      localStorage
-    )
+    options?: AuthOptions | null
   ) {
     this.serverConfiguration = serverConfiguration
     this.serverAdapter = serverAdapter
     this.clientAdapter = clientAdapter
-    this.accessTokenDecoder = accessTokenDecoder
 
-    this.tokenStorage = toTokenStorageSync(tokenStorage)
-    this.tokenStorageAsync = toTokenStorageAsync(tokenStorage)
+    const effectiveOptions = Object.assign({}, defaultAuthOptions, options)
+    this.accessTokenDecoder = effectiveOptions.accessTokenDecoder
 
-    this.persistentTokenStorage = toTokenStorageSync(persistentTokenStorage)
-    this.persistentTokenStorageAsync = toTokenStorageAsync(persistentTokenStorage)
+    this.tokenStorage = toTokenStorageSync(effectiveOptions.tokenStorage)
+    this.tokenStorageAsync = toTokenStorageAsync(effectiveOptions.tokenStorage)
+
+    this.persistentTokenStorage = toTokenStorageSync(effectiveOptions.persistentTokenStorage)
+    this.persistentTokenStorageAsync = toTokenStorageAsync(effectiveOptions.persistentTokenStorage)
 
     this.initClientAdapter()
   }
