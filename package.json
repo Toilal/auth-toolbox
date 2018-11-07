@@ -33,7 +33,9 @@
   "scripts": {
     "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
-    "build": "tsc && rollup -c rollup.config.js && typedoc --out docs --target es6 --theme minimal --exclude **/*.umd.ts --mode file src",
+    "build": "tsc && npm run rollup && npm run typedoc",
+    "rollup": "rollup -c rollup.config.js",
+    "typedoc": "typedoc --out docs --target es6 --theme minimal --excludePrivate --exclude **/*.umd.ts --mode file src",
     "start": "rollup -c rollup.config.js -w",
     "test": "jest --coverage --verbose",
     "test:watch": "jest --coverage --watch",

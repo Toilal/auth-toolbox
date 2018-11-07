@@ -27,8 +27,22 @@ const defaultAuthOptions: AuthOptions = {
   clientInterceptors: true
 }
 
+/**
+ * Default entrypoint for auth-toolbox module.
+ *
+ * Load tokens from {@link TokenStorage}, support authentication methods like {@link login} and
+ * {@link logout}, and automates the authentication of client provided with {@link ClientAdapter}.
+ *
+ * Options can be defined with {@link AuthOptions}.
+ *
+ * @param C Credentials type
+ * @param R Client response type
+ */
 export default class Auth<C = UsernamePasswordCredentials, R = any>
   implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
+  /**
+   * @inheritDoc
+   */
   usePersistentStorage: boolean = false
 
   private serverAdapter: ServerAdapter<C>
@@ -48,6 +62,16 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
   private renewRunning: boolean = false
   private renewPromises: { promise: Promise<any>; resolve: any; reject: any }[] = []
 
+  /**
+   * Builds an instance with given configuration.
+   *
+   * @param serverConfiguration Server configuration to use.
+   *                            It may be a hardcoded configuration, or a configuration build from
+   *                            a discovery service.
+   * @param serverAdapter       Server adapter to use.
+   * @param clientAdapter       Client adapter to user.
+   * @param options             Options
+   */
   constructor(
     serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
     serverAdapter: ServerAdapter<C>,
@@ -102,6 +126,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   get storageSync(): boolean {
     if (this.tokenStorageAsync && !this.tokenStorage) {
       return false
@@ -114,6 +141,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     return true
   }
 
+  /**
+   * @inheritDoc
+   */
   public async loadTokensFromStorageAsync(): Promise<Tokens<C> | undefined> {
     if (this.tokenStorageAsync) {
       let tokens = await this.tokenStorageAsync.getTokens<C>()
@@ -143,6 +173,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   public loadTokensFromStorage(): Tokens<C> | undefined {
     if (this.tokenStorageAsync) {
       if (!this.tokenStorage) {
@@ -181,6 +214,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   release() {
     for (const handle of this.interceptors) {
       handle()
@@ -189,10 +225,16 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     this.removeListener(...this.listeners)
   }
 
+  /**
+   * @inheritDoc
+   */
   addListener(...listeners: AuthListener[]) {
     this.listeners.push(...listeners)
   }
 
+  /**
+   * @inheritDoc
+   */
   removeListener(...listeners: AuthListener[]) {
     for (const listener of listeners) {
       const indexOf = this.listeners.indexOf(listener)
@@ -203,10 +245,16 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   getTokens(): Tokens<C> | undefined {
     return this.tokens
   }
 
+  /**
+   * @inheritDoc
+   */
   decodeAccessToken(): any | undefined {
     if (this.tokens) {
       if (!this.accessTokenDecoder || !this.accessTokenDecoder.decode) {
@@ -218,14 +266,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
-  get accessToken(): string | undefined {
-    return this.tokens && this.tokens.access ? this.tokens.access.value : undefined
-  }
-
-  get refreshToken(): string | undefined {
-    return this.tokens && this.tokens.refresh ? this.tokens.refresh.value : undefined
-  }
-
+  /**
+   * @inheritDoc
+   */
   isAuthenticated(): boolean {
     return !!this.tokens
   }
@@ -237,6 +280,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     return this.deferredServerConfiguration
   }
 
+  /**
+   * @inheritDoc
+   */
   async login(credentials: C): Promise<R> {
     const response = await this.loginImpl(credentials)
     this.listeners.forEach(l => l.login && l.login())
@@ -258,6 +304,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     return response
   }
 
+  /**
+   * @inheritDoc
+   */
   async renew(): Promise<R | void> {
     const serverConfiguration = await this.getServerConfiguration()
     if (this.tokens && serverConfiguration) {
@@ -309,6 +358,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   async logout(): Promise<R | void> {
     if (this.tokens) {
       let response
@@ -427,6 +479,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
   }
 
+  /**
+   * @inheritDoc
+   */
   public setTokens(tokens: Tokens<C> | undefined | null) {
     if (tokens) {
       this.setTokensImpl(tokens)
@@ -435,6 +490,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   public async setTokensAsync(tokens: Tokens<C> | undefined | null) {
     if (tokens) {
       await this.setTokensImplAsync(tokens)
@@ -443,6 +501,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   async interceptRequest(request: Request) {
     let tokens = this.getTokens()
     const isLoginRequest = await this.isLoginRequest(request)
@@ -469,6 +530,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
     return false
   }
 
+  /**
+   * @inheritDoc
+   */
   async interceptResponse(request: Request, response: Response) {
     const tokens = this.getTokens()
     const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined

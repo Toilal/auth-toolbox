@@ -24,6 +24,17 @@ export interface OpenidConfiguration {
   end_session_endpoint: string
 }
 
+/**
+ * Provides a {@link ServerConfiguration} through [OpenID discovery](https://openid.net/specs/openid-connect-discovery-1_0.html).
+ *
+ * It requests `{issuerUrl}/.well-known/openid-configuration` to retrieve login, renew and logout
+ * endpoints.
+ *
+ * It should be given to {@link Auth} constructor.
+ *
+ * @param client client adapter to request discovery endpoint with.
+ * @param issuerUrl url of the authentication realm (without `/.well-known/openid-configuration`).
+ */
 export async function openidConnectDiscovery<R>(
   client: ClientAdapter<R>,
   issuerUrl: string
@@ -41,6 +52,10 @@ export async function openidConnectDiscovery<R>(
   }
 }
 
+/**
+ * Implements OpenID Connect "Resource Owner Password Credentials Grant", it should be given to
+ * {@link Auth} constructor.
+ */
 export default class OpenidConnectAdapter implements ServerAdapter {
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: UsernamePasswordCredentials): Request {
     const rawData = {

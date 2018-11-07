@@ -1,5 +1,11 @@
 import { Token, TokenDecoder } from '..'
 
+/**
+ * Default implementation of {@link TokenDecoder}. It doesn't support decoding {@link Token} and checks the
+ * expiration date from the server response.
+ *
+ * It's the default value on {@link Auth} constructor for {@link AuthOptions.accessTokenDecoder}.
+ */
 export default class DefaultTokenDecoder implements TokenDecoder {
   protected offset: number
 

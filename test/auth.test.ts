@@ -296,8 +296,16 @@ describe('Auth', () => {
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter)
     auth.loadTokensFromStorage()
 
-    expect(auth.accessToken).toEqual('accessTokenValue')
-    expect(auth.refreshToken).toEqual('refreshTokenValue')
+    const tokens = auth.getTokens()
+
+    expect(tokens).toBeDefined()
+    if (tokens) {
+      expect(tokens.access.value).toEqual('accessTokenValue')
+      expect(tokens.refresh).toBeDefined()
+      if (tokens.refresh) {
+        expect(tokens.refresh.value).toEqual('refreshTokenValue')
+      }
+    }
   })
 
   it('decodes accessToken with defined tokenDecoder.decode', () => {

@@ -2,6 +2,13 @@ import { Token, TokenDecoder } from '..'
 import DefaultTokenDecoder from './default-token-decoder'
 import { decode } from 'jsonwebtoken'
 
+/**
+ * {@link TokenDecoder} based on jsonwebtoken package to be used with JWT {@link Token}.
+ * It check expiration dates from both server response and JWT `exp` claim, and supports decoding
+ * of the JWT token.
+ *
+ * It should be given to {@link Auth} constructor through {@link AuthOptions.accessTokenDecoder}.
+ */
 export default class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder {
   constructor(expiredOffset: number = 0) {
     super(expiredOffset)

@@ -1,6 +1,11 @@
 import { ClientAdapter, Request, RequestInterceptor, Response, ResponseInterceptor } from '..'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
+/**
+ * Wraps instance of Axios client into a {@link ClientAdapter} to support automated authentication.
+ *
+ * It should be given to {@link Auth} constructor.
+ */
 export default class AxiosAdapter implements ClientAdapter<AxiosResponse> {
   private axios: AxiosInstance
   private config: AxiosRequestConfig

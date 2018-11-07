@@ -1,5 +1,12 @@
 import { Tokens, TokenStorage } from '..'
 
+/**
+ * Default implementation of {@link TokenStorage}, delegating to Storage of the browser.
+ * (`sessionStorage` or `localStorage`).
+ *
+ * It should be given to {@link Auth} constructor through {@link AuthOptions.tokenStorage} and
+ * {@link AuthOptions.persistentTokenStorage}.
+ */
 export default class DefaultTokenStorage implements TokenStorage {
   readonly async: false = false
 
