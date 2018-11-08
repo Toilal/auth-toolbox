@@ -217,27 +217,66 @@ export interface Response {
 /**
  * Adapts HTTP client to common objects like Request and Response.
  *
- * It supports performing requests to {@link ServerConfiguration} endpoints, like login, renew and logout,
- * but also supports performing applications requests throw request method.
+ * It supports performing requests to {@link ServerConfiguration} endpoints, like {@link login} and
+ * {@link logout}, but also supports performing authenticated requests throw request method.
  *
  * It can setup {@link RequestInterceptor} and {@link ResponseInterceptor} to automate the
  * authentication on the underlying client.
  *
+ * Implementation of this interface can be given to {@link Auth} constructor.
+ *
  * @typeparam R Client response type
  */
 export interface ClientAdapter<R = any> {
+  /**
+   * Convert an authorization server login {@link Request} to a client promise that will perform it.
+   *
+   * @param request
+   */
   login(request: Request): Promise<R>
 
+  /**
+   * Convert an authorization server renew {@link Request} to a client promise that will perform it.
+   *
+   * @param request
+   */
   renew(request: Request): Promise<R>
 
+  /**
+   * Convert an authorization server logout {@link Request} to a client promise that will perform it.
+   *
+   * @param request
+   */
   logout(request: Request): Promise<R>
 
+  /**
+   * Convert any resource owner {@link Request} to a client promise that will perform it.
+   *
+   * @param request
+   */
   request(request: Request): Promise<R>
 
+  /**
+   * Convert client response to a generic {@link Response}.
+   *
+   * @param clientResponse
+   */
   asResponse(clientResponse: R): Response
 
+  /**
+   * Setup a request interceptor that intercept all requests on the underlying client to automate
+   * authentication of each requests.
+   *
+   * @param interceptor
+   */
   setupRequestInterceptor(interceptor: RequestInterceptor): () => void
 
+  /**
+   * Setup a response interceptor that intercept all responses on the underlying client to automate
+   * authentication of each requests.
+   *
+   * @param interceptor
+   */
   setupErrorResponseInterceptor(interceptor: ResponseInterceptor): () => void
 }
 
@@ -252,21 +291,66 @@ export interface ClientAdapter<R = any> {
  * {@link Response}, and checking if {@link Tokens.access} or {@link Tokens.refresh} have expired
  * from {@link Response}.
  *
+ * Implementation of this interface can be given to {@link Auth} constructor.
+ *
  * @param C Credentials type
  */
 export interface ServerAdapter<C = UsernamePasswordCredentials> {
+  /**
+   * Build a login {@link Request} (with credentials).
+   *
+   * @param loginEndpoint
+   * @param credentials
+   */
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: C): Request
 
+  /**
+   * Build a renew {@link Request}  (with refresh token).
+   *
+   * @param renewEndpoint
+   * @param refreshToken
+   */
   asRenewRequest(renewEndpoint: ServerEndpoint, refreshToken: Token): Request
 
+  /**
+   * Build a logout {@link Request} (with refresh token).
+   *
+   * @param logoutEndpoint
+   * @param refreshToken
+   */
   asLogoutRequest(logoutEndpoint: ServerEndpoint, refreshToken: Token): Request
 
+  /**
+   * Apply the access token to a {@link Request}.
+   *
+   * It should add `Authorization` header.
+   *
+   * @param request request to configure
+   * @param accessToken access {@link Token.value} to apply.
+   */
   setAccessToken(request: Request, accessToken: string | undefined): void
 
+  /**
+   * Read tokens from received {@link Response}.
+   *
+   * @param response received response
+   */
   getResponseTokens(response: Response): Tokens<C>
 
+  /**
+   * Check if access token has expired from {@link Response}.
+   *
+   * @param request initial request that leads to the received response
+   * @param response received response
+   */
   accessTokenHasExpired(request: Request, response: Response): boolean
 
+  /**
+   * Check if refresh token has expired from {@link Response}.
+   *
+   * @param request initial request that leads to the received response
+   * @param response received response
+   */
   refreshTokenHasExpired(request: Request, response: Response): boolean
 }
 
@@ -286,11 +370,22 @@ export interface ServerEndpoint {
  * Only login endpoint declaration is strictly required.
  *
  * If no renewEndpoint is declared, credentials will be stored in TokenStorage to support Renewal.
- * If renewEndpoint is declared, refresh token will be stored in TokenStorage
+ * If renewEndpoint is declared, refresh token will be stored in TokenStorage.
  */
 export interface ServerConfiguration {
+  /**
+   * Endpoint for authentication with Credentials.
+   */
   loginEndpoint: ServerEndpoint
+
+  /**
+   * Endpoint for authentication with Refresh Token.
+   */
   renewEndpoint?: ServerEndpoint
+
+  /**
+   * Endpoint to terminate session.
+   */
   logoutEndpoint?: ServerEndpoint
 }
 
