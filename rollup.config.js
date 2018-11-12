@@ -1,4 +1,5 @@
 import resolve from 'rollup-plugin-node-resolve'
+import builtins from 'rollup-plugin-node-builtins';
 import commonjs from 'rollup-plugin-commonjs'
 import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
@@ -26,7 +27,7 @@ if (pkg.peerDependencies) {
 const libraryName = 'auth-toolbox'
 
 export default {
-  input: `src/${libraryName}.umd.ts`,
+  input: `src/index.ts`,
   output: [
     { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true, globals: globals },
     { file: pkg.module, format: 'es', sourcemap: true, globals: globals }
@@ -47,7 +48,8 @@ export default {
     // which external modules to include in the bundle
     // https://github.com/rollup/rollup-plugin-node-resolve#usage
     resolve(),
-
+    // Add node builtins in bundle
+    builtins(),
     // Resolve source maps to the original source
     sourceMaps(),
   ],

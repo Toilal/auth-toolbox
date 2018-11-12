@@ -8,7 +8,7 @@ import {
   Token,
   Tokens,
   UsernamePasswordCredentials
-} from '..'
+} from '../auth-toolbox'
 import { stringify } from 'querystring'
 
 export interface LoginResponse {
@@ -56,7 +56,7 @@ export async function openidConnectDiscovery<R>(
  * Implements OpenID Connect "Resource Owner Password Credentials Grant", it should be given to
  * {@link Auth} constructor.
  */
-export default class OpenidConnectAdapter implements ServerAdapter {
+export class OpenidConnectAdapter implements ServerAdapter {
   asLoginRequest(loginEndpoint: ServerEndpoint, credentials: UsernamePasswordCredentials): Request {
     const rawData = {
       grant_type: 'password',

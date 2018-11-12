@@ -1,11 +1,11 @@
-import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../src'
-import AxiosAdapter from '../src/client-adapter/axios-adapter'
+import Auth, { AuthListener, ServerConfiguration, Token, TokenDecoder } from '../src/auth-toolbox'
+import { AxiosAdapter } from '../src/client-adapter/axios-adapter'
 import axios from 'axios'
-import OpenidConnectAdapter, { LoginResponse } from '../src/server-adapter/openid-connect-adapter'
+import { OpenidConnectAdapter, LoginResponse } from '../src/server-adapter/openid-connect-adapter'
 import MockAdapter from 'axios-mock-adapter'
-import JwtTokenDecoder from '../src/token-decoder/jwt-token-decoder'
-import DefaultTokenStorage from '../src/token-storage/default-token-storage'
-import { TokenStorageAsyncAdapter } from '../src/token-storage'
+import { JwtTokenDecoder } from '../src/token-decoder/jwt-token-decoder'
+import { DefaultTokenStorage } from '../src/token-storage/default-token-storage'
+import { TokenStorageAsyncAdapter } from '../src/token-storage/async-adapter'
 
 describe('Auth', () => {
   beforeEach(() => {

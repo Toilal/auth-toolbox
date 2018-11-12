@@ -1,4 +1,4 @@
-import { Token, TokenDecoder } from '..'
+import { Token, TokenDecoder } from '../auth-toolbox'
 
 /**
  * Default implementation of {@link TokenDecoder}. It doesn't support decoding {@link Token} and checks the
@@ -6,7 +6,7 @@ import { Token, TokenDecoder } from '..'
  *
  * It's the default value on {@link Auth} constructor for {@link AuthOptions.accessTokenDecoder}.
  */
-export default class DefaultTokenDecoder implements TokenDecoder {
+export class DefaultTokenDecoder implements TokenDecoder {
   protected offset: number
 
   constructor(offsetSeconds: number = 0) {

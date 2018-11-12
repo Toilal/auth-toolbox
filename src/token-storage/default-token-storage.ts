@@ -1,4 +1,4 @@
-import { Tokens, TokenStorage } from '..'
+import { Tokens, TokenStorage } from '../auth-toolbox'
 
 /**
  * Default implementation of {@link TokenStorage}, delegating to Storage of the browser.
@@ -7,7 +7,7 @@ import { Tokens, TokenStorage } from '..'
  * It should be given to {@link Auth} constructor through {@link AuthOptions.tokenStorage} and
  * {@link AuthOptions.persistentTokenStorage}.
  */
-export default class DefaultTokenStorage implements TokenStorage {
+export class DefaultTokenStorage implements TokenStorage {
   readonly async: false = false
 
   private storage: Storage

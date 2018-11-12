@@ -1,5 +1,5 @@
-import { Token, TokenDecoder } from '..'
-import DefaultTokenDecoder from './default-token-decoder'
+import { Token, TokenDecoder } from '../auth-toolbox'
+import { DefaultTokenDecoder } from './default-token-decoder'
 import { decode } from 'jsonwebtoken'
 
 /**
@@ -9,7 +9,7 @@ import { decode } from 'jsonwebtoken'
  *
  * It should be given to {@link Auth} constructor through {@link AuthOptions.accessTokenDecoder}.
  */
-export default class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder {
+export class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder {
   constructor(expiredOffset: number = 0) {
     super(expiredOffset)
   }

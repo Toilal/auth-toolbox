@@ -1,4 +1,10 @@
-import { ClientAdapter, Request, RequestInterceptor, Response, ResponseInterceptor } from '..'
+import {
+  ClientAdapter,
+  Request,
+  RequestInterceptor,
+  Response,
+  ResponseInterceptor
+} from '../auth-toolbox'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 /**
@@ -6,7 +12,7 @@ import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'ax
  *
  * It should be given to {@link Auth} constructor.
  */
-export default class AxiosAdapter implements ClientAdapter<AxiosResponse> {
+export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
   private axios: AxiosInstance
   private config: AxiosRequestConfig
 

@@ -14,11 +14,11 @@ import {
   TokenStorage,
   TokenStorageAsync,
   UsernamePasswordCredentials
-} from '.'
+} from './auth-toolbox'
 
-import DefaultTokenDecoder from './token-decoder/default-token-decoder'
-import DefaultTokenStorage from './token-storage/default-token-storage'
-import { toTokenStorageAsync, toTokenStorageSync } from './token-storage'
+import { DefaultTokenDecoder } from './token-decoder/default-token-decoder'
+import { DefaultTokenStorage } from './token-storage/default-token-storage'
+import { toTokenStorageAsync, toTokenStorageSync } from './token-storage/async-adapter'
 
 const defaultAuthOptions: AuthOptions = {
   accessTokenDecoder: new DefaultTokenDecoder(),
@@ -38,7 +38,7 @@ const defaultAuthOptions: AuthOptions = {
  * @param C Credentials type
  * @param R Client response type
  */
-export default class Auth<C = UsernamePasswordCredentials, R = any>
+export class Auth<C = UsernamePasswordCredentials, R = any>
   implements IAuth<C, R>, RequestInterceptor, ResponseInterceptor {
   /**
    * @inheritDoc
@@ -522,9 +522,9 @@ export default class Auth<C = UsernamePasswordCredentials, R = any>
           await this.expired()
           throw err
         }
-        tokens = this.getTokens()! // it's been renewed, so we are sure tokens are defined
+        tokens = this.getTokens()
       }
-      this.serverAdapter.setAccessToken(request, tokens.access.value)
+      this.serverAdapter.setAccessToken(request, tokens!.access.value)
       return true
     }
     return false

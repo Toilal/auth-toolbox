@@ -1,6 +1,6 @@
-import { Tokens } from '../../src'
-import DefaultTokenStorage from '../../src/token-storage/default-token-storage'
-import { toTokenStorageAsync, toTokenStorageSync } from '../../src/token-storage'
+import { Tokens } from '../../src/auth-toolbox'
+import { DefaultTokenStorage } from '../../src/token-storage/default-token-storage'
+import { toTokenStorageAsync, toTokenStorageSync } from '../../src/token-storage/async-adapter'
 
 describe('toTokenStorageAsync', () => {
   beforeEach(() => {
