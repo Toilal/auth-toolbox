@@ -1,16 +1,15 @@
 import {
   OpenidConnectAdapter,
   LoginResponse,
-  openidConnectDiscovery
-} from '../../src/server-adapter/openid-connect-adapter'
+  openidConnectDiscovery,
+  AxiosAdapter,
+  Request,
+  Response
+} from '../../src'
 
-import { AxiosAdapter } from '../../src/client-adapter/axios-adapter'
 import axios from 'axios'
-
 import { advanceTo, clear } from 'jest-date-mock'
-
 import MockAdapter from 'axios-mock-adapter'
-import { Request, Response } from '../../src/auth-toolbox'
 
 describe('Openid Connect Adapter - Discovery', () => {
   it('build configuration from /.well-known/openid-configuration', async () => {

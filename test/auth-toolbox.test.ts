@@ -1,4 +1,4 @@
-import Auth from '../src/auth-toolbox'
+import { Auth } from '../src'
 
 describe('Jwt Toolbox', () => {
   it('default module is available', () => {
