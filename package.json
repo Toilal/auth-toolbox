@@ -12,7 +12,7 @@
     "request"
   ],
   "main": "dist/auth-toolbox.umd.js",
-  "module": "dist/auth-toolbox.mjs",
+  "module": "dist/auth-toolbox.esm.js",
   "typings": "dist/lib/index.d.ts",
   "files": [
     "dist",
