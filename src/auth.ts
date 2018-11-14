@@ -2,6 +2,7 @@ import {
   AuthListener,
   AuthOptions,
   ClientAdapter,
+  Exclude,
   IAuth,
   Request,
   RequestInterceptor,
@@ -55,6 +56,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   private tokenStorageAsync?: TokenStorageAsync | null
   private persistentTokenStorageAsync?: TokenStorageAsync | null
   private listeners: AuthListener[] = []
+  private excludes: ((request: Request, response?: Response) => boolean)[] = []
 
   private tokens?: Tokens<C>
   private interceptors: (() => void)[] = []
@@ -97,6 +99,10 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
 
     if (effectiveOptions.clientInterceptors) {
       this.initClientAdapter()
+    }
+
+    if (effectiveOptions.excludes) {
+      this.addExclude(...effectiveOptions.excludes)
     }
 
     if (effectiveOptions.loadTokensFromStorage === undefined || effectiveOptions.loadTokensFromStorage === null) {
@@ -236,6 +242,22 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
       if (indexOf > -1) {
         this.listeners.splice(indexOf, 1)
       }
+    }
+  }
+
+  public addExclude(...excludes: Exclude[]) {
+    for (const exclude of excludes) {
+      let excludeFunction: (request: Request, response?: Response) => boolean
+
+      if (typeof exclude === 'string') {
+        excludeFunction = (request: Request) => request.url === exclude
+      } else if (exclude instanceof RegExp) {
+        excludeFunction = (request: Request) => exclude.test(request.url)
+      } else {
+        excludeFunction = exclude
+      }
+
+      this.excludes.push(excludeFunction)
     }
   }
 
@@ -484,10 +506,23 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  private isExcluded(request: Request, response?: Response): boolean {
+    for (const exclude of this.excludes) {
+      if (exclude(request, response)) {
+        return true
+      }
+    }
+    return false
+  }
+
   /**
    * @inheritDoc
    */
   async interceptRequest(request: Request) {
+    if (this.isExcluded(request)) {
+      return false
+    }
+
     let tokens = this.getTokens()
     const isLoginRequest = await this.isLoginRequest(request)
     if (tokens && tokens.access && !isLoginRequest) {
@@ -528,6 +563,10 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
    * @inheritDoc
    */
   async interceptResponse(request: Request, response: Response) {
+    if (this.isExcluded(request, response)) {
+      return false
+    }
+
     const tokens = this.getTokens()
     const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
 

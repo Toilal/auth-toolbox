@@ -112,6 +112,13 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
   isAuthenticated(): boolean
 
   /**
+   * Add a request type to be excluded from authentication interceptors.
+   *
+   * @param excludes
+   */
+  addExclude(...excludes: Exclude[]): void
+
+  /**
    * Add one or more listeners.
    *
    * @param listeners
@@ -173,6 +180,11 @@ export interface AuthOptions {
    * @default true
    */
   clientInterceptors?: boolean
+
+  /**
+   * Exclude some requests and responses from interception.
+   */
+  excludes?: Exclude[]
 }
 
 /**
@@ -463,6 +475,11 @@ export interface AuthListener {
    */
   renew?(): any
 }
+
+/**
+ * Define a type of request or response to be excluded
+ */
+export type Exclude = string | RegExp | ((request: Request, response?: Response) => boolean)
 
 /**
  * TokenStorage can load and store {@link Tokens} synchronously.

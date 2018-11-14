@@ -6,6 +6,8 @@ import {
   JwtTokenDecoder,
   LoginResponse,
   OpenidConnectAdapter,
+  Request,
+  Response,
   ServerConfiguration,
   Token,
   TokenDecoder,
@@ -1460,6 +1462,192 @@ describe('Auth', () => {
 
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       clientInterceptors: false
+    })
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
+  it('does not intercept if matching a string exclude', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' },
+      renewEndpoint: { method: 'POST', url: 'renew' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      excludes: [/.*usto.*/]
+    })
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
+  it('does not intercept if matching a RegExp exclude', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' },
+      renewEndpoint: { method: 'POST', url: 'renew' }
+    }
+
+    const exclude: ((request: Request, response?: Response) => boolean) = (request: Request, response?: Response) =>
+      request.url === 'custom'
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      excludes: [exclude]
+    })
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
+  it('does not intercept if matching a functional exclude', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue',
+            refresh_token: 'refreshTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(200, {
+      access_token: 'accessTokenValueRenew',
+      refresh_token: 'refreshTokenValueRenew'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' },
+      renewEndpoint: { method: 'POST', url: 'renew' }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      excludes: ['custom']
     })
 
     await auth.login({ username: 'testUsername', password: 'testPassword' })
