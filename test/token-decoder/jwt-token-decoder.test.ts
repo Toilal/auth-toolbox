@@ -90,4 +90,13 @@ describe('Jwt Token Decoder', () => {
     const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeTruthy()
   })
+
+  it('check token not is expired with NaN offset', () => {
+    const token: Token = { value: accessTokenExpNowMinus1 }
+
+    const tokenDecoder = new JwtTokenDecoder(NaN)
+
+    const accessTokenExpired = tokenDecoder.isExpired(token)
+    expect(accessTokenExpired).toBeFalsy()
+  })
 })

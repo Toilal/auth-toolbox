@@ -10,6 +10,10 @@ import { decode } from 'jsonwebtoken'
  * It should be given to {@link Auth} constructor through {@link AuthOptions.accessTokenDecoder}.
  */
 export class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder {
+  /**
+   * @param expiredOffset Offset in millisecond to consider the token as expired.
+   *                      use NaN to disable expiration from token decoding
+   */
   constructor(expiredOffset: number = 0) {
     super(expiredOffset)
   }
@@ -21,6 +25,10 @@ export class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder
   isExpired(token: Token): boolean {
     if (super.isExpired(token)) {
       return true
+    }
+
+    if (isNaN(this.offset)) {
+      return false
     }
 
     const now = Math.round((new Date().getTime() - this.offset) / 1000)
