@@ -431,8 +431,9 @@ export interface AuthListener {
    * Called when IAuth is initialized.
    *
    * @param storageLoaded
+   * @param err
    */
-  initialized?(storageLoaded?: boolean): any
+  initialized?(storageLoaded?: boolean, err?: any): any
 
   /**
    * Called when Tokens changes.

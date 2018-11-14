@@ -114,8 +114,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
             this.listeners.forEach(l => l.initialized && l.initialized(true))
           })
           .catch(e => {
-            console.error('An error has occured while loading tokens from async storage.')
-            console.error(e)
+            this.listeners.forEach(l => l.initialized && l.initialized(false, e))
           })
       }
     } else {
@@ -552,7 +551,6 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
       if (this.serverAdapter.accessTokenHasExpired(request, response)) {
         await this.expired()
       }
-
       return false
     }
   }

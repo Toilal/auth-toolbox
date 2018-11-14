@@ -9,6 +9,8 @@ import {
   ServerConfiguration,
   Token,
   TokenDecoder,
+  Tokens,
+  TokenStorage,
   TokenStorageAsyncAdapter
 } from '../src'
 import axios from 'axios'
@@ -119,7 +121,7 @@ describe('Auth', () => {
     expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
   })
 
-  it('loads tokens from async localStorage (async)', async () => {
+  it('loads tokens from async localStorage (async)', done => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
@@ -133,20 +135,76 @@ describe('Auth', () => {
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
-      tokenStorage,
-      persistentTokenStorage
-    })
-    await auth.loadTokensFromStorageAsync()
+    const listener: AuthListener = {
+      initialized(loaded: boolean, err: any) {
+        expect(loaded).toBeTruthy()
+        expect(err).toBeUndefined()
 
-    const token = auth.getTokens()
-    expect(token).toBeDefined()
-    if (token) {
-      expect(token.access.value).toBe('accessTokenValue')
-      expect(token.refresh).toBeUndefined()
+        const token = auth.getTokens()
+        expect(token).toBeDefined()
+        if (token) {
+          expect(token.access.value).toBe('accessTokenValue')
+          expect(token.refresh).toBeUndefined()
+        }
+
+        expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
+        done()
+      }
     }
 
-    expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      tokenStorage,
+      persistentTokenStorage,
+      loadTokensFromStorage: true,
+      listeners: [listener]
+    })
+  })
+
+  it('loads tokens from async localStorage (async)', done => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    class FailingTokenStorage implements TokenStorage {
+      readonly async = false
+
+      clear(): void {
+        throw new Error('!FailingTokenStorage!')
+      }
+
+      getTokens<C>(): Tokens<C> | undefined {
+        throw new Error('!FailingTokenStorage!')
+      }
+
+      store<C>(tokens: Tokens<C>): void {
+        throw new Error('!FailingTokenStorage!')
+      }
+    }
+
+    const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(sessionStorage), false)
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(new FailingTokenStorage(), false)
+
+    localStorage.setItem('auth.accessToken', 'accessTokenValue')
+
+    const listener: AuthListener = {
+      initialized(loaded: boolean, err: any) {
+        expect(loaded).toBeFalsy()
+        expect(err).toBeInstanceOf(Error)
+
+        done()
+      }
+    }
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      tokenStorage,
+      persistentTokenStorage,
+      loadTokensFromStorage: true,
+      listeners: [listener]
+    })
   })
 
   it('fails to load tokens from async localStorage (sync)', () => {
@@ -1171,6 +1229,126 @@ describe('Auth', () => {
       expect(() => {
         throw e
       }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
+  it('intercepts with null token decoder and expired access token and no refresh token', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(401, {
+      error: 'invalid_grant'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' }
+    }
+
+    const tokenDecoder = null
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, tokenDecoder)
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow(/Request failed with status code 401.*/)
+    }
+
+    return null
+  })
+
+  it('intercepts with token decoder and expired access token and no refresh token', async () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    axiosMock.onGet('custom').reply(config => {
+      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+        return [200]
+      } else {
+        return [
+          401,
+          {
+            error: 'invalid_token'
+          }
+        ]
+      }
+    })
+
+    axiosMock.onPost('login').reply(config => {
+      if (config.data === 'grant_type=password&username=testUsername&password=testPassword') {
+        return [
+          200,
+          {
+            access_token: 'accessTokenValue'
+          } as LoginResponse
+        ]
+      } else {
+        return [401]
+      }
+    })
+
+    axiosMock.onPost('renew').reply(401, {
+      error: 'invalid_grant'
+    })
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'POST', url: 'login' }
+    }
+
+    class ExpiredTokenDecoder implements TokenDecoder {
+      isExpired(token: Token): boolean {
+        return true
+      }
+    }
+
+    const accessTokenDecoder = new ExpiredTokenDecoder()
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, { accessTokenDecoder })
+
+    await auth.login({ username: 'testUsername', password: 'testPassword' })
+
+    try {
+      await axiosInstance.get('custom')
+      expect(false).toBeTruthy()
+    } catch (e) {
+      expect(() => {
+        throw e
+      }).toThrow('Access token is expired')
     }
 
     return null
