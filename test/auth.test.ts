@@ -128,14 +128,8 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(sessionStorage),
-      false
-    )
-    const persistentTokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
+    const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(sessionStorage), false)
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
@@ -164,14 +158,8 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const tokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(sessionStorage),
-      false
-    )
-    const persistentTokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
+    const tokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(sessionStorage), false)
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
 
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
@@ -365,9 +353,7 @@ describe('Auth', () => {
 
     expect(() => {
       auth.decodeAccessToken()
-    }).toThrow(
-      'An accessTokenDecoder supporting decode method should be defined to decode access token.'
-    )
+    }).toThrow('An accessTokenDecoder supporting decode method should be defined to decode access token.')
   })
 
   it('does not decode accessToken with null tokenDecoder', () => {
@@ -1614,10 +1600,7 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const persistentTokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       persistentTokenStorage,
       loadTokensFromStorage: false
@@ -1626,9 +1609,7 @@ describe('Auth', () => {
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
       'persistentTokenStorage is async. Use setTokensAsync method instead'
     )
-    expect(() => auth.setTokens(null)).toThrow(
-      'persistentTokenStorage is async. Use setTokensAsync method instead'
-    )
+    expect(() => auth.setTokens(null)).toThrow('persistentTokenStorage is async. Use setTokensAsync method instead')
   })
 
   it('fails to set token synchronously when tokenStorage is async', () => {
@@ -1658,9 +1639,7 @@ describe('Auth', () => {
     expect(() => auth.setTokens({ access: { value: 'accessTokenValue' } })).toThrow(
       'tokenStorage is async. Use setTokensAsync method instead'
     )
-    expect(() => auth.setTokens(null)).toThrow(
-      'tokenStorage is async. Use setTokensAsync method instead'
-    )
+    expect(() => auth.setTokens(null)).toThrow('tokenStorage is async. Use setTokensAsync method instead')
   })
 
   it('fails to load token synchronously when persistentTokenStorage is async', () => {
@@ -1681,10 +1660,7 @@ describe('Auth', () => {
       loginEndpoint: { method: 'post', url: 'login' }
     }
 
-    const persistentTokenStorage = new TokenStorageAsyncAdapter(
-      new DefaultTokenStorage(localStorage),
-      false
-    )
+    const persistentTokenStorage = new TokenStorageAsyncAdapter(new DefaultTokenStorage(localStorage), false)
     const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       persistentTokenStorage
     })

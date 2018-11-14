@@ -99,10 +99,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
       this.initClientAdapter()
     }
 
-    if (
-      effectiveOptions.loadTokensFromStorage === undefined ||
-      effectiveOptions.loadTokensFromStorage === null
-    ) {
+    if (effectiveOptions.loadTokensFromStorage === undefined || effectiveOptions.loadTokensFromStorage === null) {
       // If undefined or null, tokens will be loaded only if storage supports sync loading.
       effectiveOptions.loadTokensFromStorage = this.storageSync
     }
@@ -184,9 +181,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
       let tokens = this.tokenStorage.getTokens<C>()
       if (this.persistentTokenStorageAsync) {
         if (!this.persistentTokenStorage) {
-          throw new Error(
-            'persistentTokenStorage is async. Use loadTokensFromStorageAsync method instead'
-          )
+          throw new Error('persistentTokenStorage is async. Use loadTokensFromStorageAsync method instead')
         }
         let persistentTokens = this.persistentTokenStorage.getTokens<C>()
         if (persistentTokens) {
@@ -258,9 +253,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   decodeAccessToken(): any | undefined {
     if (this.tokens) {
       if (!this.accessTokenDecoder || !this.accessTokenDecoder.decode) {
-        throw new Error(
-          'An accessTokenDecoder supporting decode method should be defined to decode access token.'
-        )
+        throw new Error('An accessTokenDecoder supporting decode method should be defined to decode access token.')
       }
       return this.accessTokenDecoder.decode(this.tokens.access)
     }
@@ -291,10 +284,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
 
   private async loginImpl(credentials: C): Promise<R> {
     const serverConfiguration = await this.getServerConfiguration()
-    const request = this.serverAdapter.asLoginRequest(
-      serverConfiguration.loginEndpoint,
-      credentials
-    )
+    const request = this.serverAdapter.asLoginRequest(serverConfiguration.loginEndpoint, credentials)
     const response = await this.clientAdapter.login(request)
     const tokens = this.serverAdapter.getResponseTokens(response)
     if (this.usePersistentStorage && !serverConfiguration.renewEndpoint) {
@@ -318,10 +308,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
             if (!this.tokens.refresh) {
               throw new Error('No refresh token available to renew')
             }
-            const request = this.serverAdapter.asRenewRequest(
-              serverConfiguration.renewEndpoint,
-              this.tokens.refresh
-            )
+            const request = this.serverAdapter.asRenewRequest(serverConfiguration.renewEndpoint, this.tokens.refresh)
             response = await this.clientAdapter.renew(request)
           } else {
             if (!this.tokens.credentials) {
@@ -366,10 +353,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
       let response
       const serverConfiguration = await this.getServerConfiguration()
       if (serverConfiguration.logoutEndpoint && this.tokens.refresh) {
-        const request = this.serverAdapter.asLogoutRequest(
-          serverConfiguration.logoutEndpoint,
-          this.tokens.refresh
-        )
+        const request = this.serverAdapter.asLogoutRequest(serverConfiguration.logoutEndpoint, this.tokens.refresh)
         response = await this.clientAdapter.logout(request)
       }
       await this.unsetTokensImplAsync()
@@ -508,24 +492,35 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     let tokens = this.getTokens()
     const isLoginRequest = await this.isLoginRequest(request)
     if (tokens && tokens.access && !isLoginRequest) {
-      const isRenewRequest = await this.isRenewRequest(request)
-      if (
-        tokens.refresh &&
-        !isRenewRequest &&
-        this.accessTokenDecoder &&
-        this.accessTokenDecoder.isExpired &&
-        this.accessTokenDecoder.isExpired(tokens.access)
-      ) {
-        try {
-          await this.renew()
-        } catch (err) {
-          await this.expired()
-          throw err
+      if (tokens.refresh) {
+        const isRenewRequest = await this.isRenewRequest(request)
+        if (
+          !isRenewRequest &&
+          this.accessTokenDecoder &&
+          this.accessTokenDecoder.isExpired &&
+          this.accessTokenDecoder.isExpired(tokens.access)
+        ) {
+          try {
+            await this.renew()
+          } catch (err) {
+            await this.expired()
+            throw err
+          }
+          tokens = this.getTokens()
         }
-        tokens = this.getTokens()
+        this.serverAdapter.setAccessToken(request, tokens!.access.value)
+        return true
+      } else {
+        this.serverAdapter.setAccessToken(request, tokens.access.value)
+        if (
+          this.accessTokenDecoder &&
+          this.accessTokenDecoder.isExpired &&
+          this.accessTokenDecoder.isExpired(tokens.access)
+        ) {
+          await this.expired()
+          throw new Error('Access token is expired')
+        }
       }
-      this.serverAdapter.setAccessToken(request, tokens!.access.value)
-      return true
     }
     return false
   }
@@ -537,24 +532,28 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     const tokens = this.getTokens()
     const refreshToken = tokens && tokens.refresh ? tokens.refresh.value : undefined
 
-    if (!refreshToken) {
-      return false
-    }
-
-    const isRenewRequest = await this.isRenewRequest(request)
-    if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
-      try {
-        await this.renew()
-        return true
-      } catch (err) {
+    if (refreshToken) {
+      const isRenewRequest = await this.isRenewRequest(request)
+      if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
+        try {
+          await this.renew()
+          return true
+        } catch (err) {
+          await this.expired()
+          return false
+        }
+      } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
         await this.expired()
         return false
       }
-    } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
-      await this.expired()
+
+      return false
+    } else {
+      if (this.serverAdapter.accessTokenHasExpired(request, response)) {
+        await this.expired()
+      }
+
       return false
     }
-
-    return false
   }
 }

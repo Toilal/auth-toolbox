@@ -1,11 +1,4 @@
-import {
-  OpenidConnectAdapter,
-  LoginResponse,
-  openidConnectDiscovery,
-  AxiosAdapter,
-  Request,
-  Response
-} from '../../src'
+import { OpenidConnectAdapter, LoginResponse, openidConnectDiscovery, AxiosAdapter, Request, Response } from '../../src'
 
 import axios from 'axios'
 import { advanceTo, clear } from 'jest-date-mock'

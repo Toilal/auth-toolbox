@@ -30,11 +30,7 @@ describe('Default Token Storage', () => {
       access: { value: 'accessTokenValue' }
     }
 
-    const tokenStorage = new DefaultTokenStorage(
-      sessionStorage,
-      'customAccessTokenKey',
-      'customRefreshTokenKey'
-    )
+    const tokenStorage = new DefaultTokenStorage(sessionStorage, 'customAccessTokenKey', 'customRefreshTokenKey')
     tokenStorage.store(tokens)
 
     expect(sessionStorage.getItem('customAccessTokenKey')).toBe('accessTokenValue')
@@ -60,11 +56,7 @@ describe('Default Token Storage', () => {
       refresh: { value: 'refreshTokenValue' }
     }
 
-    const tokenStorage = new DefaultTokenStorage(
-      sessionStorage,
-      'customAccessTokenKey',
-      'customRefreshTokenKey'
-    )
+    const tokenStorage = new DefaultTokenStorage(sessionStorage, 'customAccessTokenKey', 'customRefreshTokenKey')
     tokenStorage.store(tokens)
 
     expect(sessionStorage.getItem('customAccessTokenKey')).toBe('accessTokenValue')
@@ -86,12 +78,8 @@ describe('Default Token Storage', () => {
 
     expect(sessionStorage.getItem('auth.accessToken')).toBe('accessTokenValue')
     expect(sessionStorage.getItem('auth.refreshToken')).toBe('refreshTokenValue')
-    expect(sessionStorage.getItem('auth.accessToken.expiresAt')).toBe(
-      accessDate.getTime().toString(10)
-    )
-    expect(sessionStorage.getItem('auth.refreshToken.expiresAt')).toBe(
-      refreshDate.getTime().toString(10)
-    )
+    expect(sessionStorage.getItem('auth.accessToken.expiresAt')).toBe(accessDate.getTime().toString(10))
+    expect(sessionStorage.getItem('auth.refreshToken.expiresAt')).toBe(refreshDate.getTime().toString(10))
   })
 
   it('store expiration dates in custom storage key', () => {
@@ -114,12 +102,8 @@ describe('Default Token Storage', () => {
 
     expect(sessionStorage.getItem('customAccessTokenKey')).toBe('accessTokenValue')
     expect(sessionStorage.getItem('customRefreshTokenKey')).toBe('refreshTokenValue')
-    expect(sessionStorage.getItem('customAccessTokenKey.exp')).toBe(
-      accessDate.getTime().toString(10)
-    )
-    expect(sessionStorage.getItem('customRefreshTokenKey.exp')).toBe(
-      refreshDate.getTime().toString(10)
-    )
+    expect(sessionStorage.getItem('customAccessTokenKey.exp')).toBe(accessDate.getTime().toString(10))
+    expect(sessionStorage.getItem('customRefreshTokenKey.exp')).toBe(refreshDate.getTime().toString(10))
   })
 
   it('clear tokens in default storage key', () => {

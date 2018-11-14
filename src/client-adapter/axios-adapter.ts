@@ -1,10 +1,4 @@
-import {
-  ClientAdapter,
-  Request,
-  RequestInterceptor,
-  Response,
-  ResponseInterceptor
-} from '../auth-toolbox'
+import { ClientAdapter, Request, RequestInterceptor, Response, ResponseInterceptor } from '../auth-toolbox'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 /**

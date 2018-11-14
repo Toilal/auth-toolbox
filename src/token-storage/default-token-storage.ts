@@ -77,17 +77,11 @@ export class DefaultTokenStorage implements TokenStorage {
   getTokens<C>(): Tokens<C> | undefined {
     const accessTokenStr = this.storage.getItem(this.accessTokenStorageKey)
     const refreshTokenStr = this.storage.getItem(this.refreshTokenStorageKey)
-    const accessTokenExpiresAtStr = this.storage.getItem(
-      this.accessTokenStorageKey + this.expiresAtSuffix
-    )
-    const refreshTokenExpiresAtStr = this.storage.getItem(
-      this.refreshTokenStorageKey + this.expiresAtSuffix
-    )
+    const accessTokenExpiresAtStr = this.storage.getItem(this.accessTokenStorageKey + this.expiresAtSuffix)
+    const refreshTokenExpiresAtStr = this.storage.getItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
     const credentialsStr = this.storage.getItem(this.credentialsTokenStorageKey)
 
-    const accessTokenExpiresAt = accessTokenExpiresAtStr
-      ? new Date(parseInt(accessTokenExpiresAtStr, 10))
-      : undefined
+    const accessTokenExpiresAt = accessTokenExpiresAtStr ? new Date(parseInt(accessTokenExpiresAtStr, 10)) : undefined
     const refreshTokenExpiresAt = refreshTokenExpiresAtStr
       ? new Date(parseInt(refreshTokenExpiresAtStr, 10))
       : undefined
