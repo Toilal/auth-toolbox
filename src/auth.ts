@@ -280,6 +280,17 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
+  isExpiredAccessToken(offset?: number): boolean | undefined {
+    if (this.tokens) {
+      if (!this.accessTokenDecoder || !this.accessTokenDecoder.isExpired) {
+        throw new Error(
+          'An accessTokenDecoder supporting isExpired method should be defined to check if access token is expired.'
+        )
+      }
+      return this.accessTokenDecoder.isExpired(this.tokens.access, offset)
+    }
+  }
+
   /**
    * @inheritDoc
    */

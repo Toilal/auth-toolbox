@@ -104,6 +104,13 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
   decodeAccessToken(): any | undefined
 
   /**
+   * Check if access token has expired.
+   *
+   * @param offset Offset in millisecond to apply on browser current date.
+   */
+  isExpiredAccessToken(offset?: number): boolean | undefined
+
+  /**
    * Check if user is authenticated.
    *
    * @return true if user is authenticated.
@@ -426,7 +433,7 @@ export interface Tokens<C = UsernamePasswordCredentials> {
  * Supports decoding a token and checking if it is expired.
  */
 export interface TokenDecoder {
-  isExpired?(token: Token): boolean
+  isExpired?(token: Token, offset?: number): boolean
 
   decode?(token: Token): any | undefined
 }

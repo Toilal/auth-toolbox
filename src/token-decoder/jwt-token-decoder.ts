@@ -22,16 +22,20 @@ export class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder
     return decode(token.value)
   }
 
-  isExpired(token: Token): boolean {
+  isExpired(token: Token, offset?: number): boolean {
     if (super.isExpired(token)) {
       return true
     }
 
-    if (isNaN(this.offset)) {
+    if (offset === undefined) {
+      offset = this.offset
+    }
+
+    if (isNaN(offset)) {
       return false
     }
 
-    const now = Math.round((new Date().getTime() - this.offset) / 1000)
+    const now = Math.round((new Date().getTime() - offset) / 1000)
     const decoded = this.decode(token)
     if ('exp' in decoded && now >= decoded.exp) {
       return true

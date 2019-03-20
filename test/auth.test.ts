@@ -394,6 +394,31 @@ describe('Auth', () => {
     })
   })
 
+  it('check accessToken is expired defined tokenDecoder.isExpired', () => {
+    const axiosInstance = axios.create()
+    const axiosAdapter = new AxiosAdapter(axiosInstance)
+
+    const accessToken =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM3MSwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.uXiL5Yu-Ip0iNkvmK54U5MHDEhE0M6KsNFAb-BWg6oQ'
+
+    const openidConnectAdapter = new OpenidConnectAdapter()
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: { method: 'post', url: 'login' }
+    }
+
+    sessionStorage.setItem('auth.accessToken', accessToken)
+
+    const accessTokenDecoder = new JwtTokenDecoder()
+
+    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+      accessTokenDecoder
+    })
+    auth.loadTokensFromStorage()
+
+    const expiredToken = auth.isExpiredAccessToken()
+    expect(expiredToken).toBe(true)
+  })
+
   it('does not decode accessToken with undefined tokenDecoder.decode', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
