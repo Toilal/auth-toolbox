@@ -2,5 +2,6 @@
   "delete": true,
   "directory": "./src",
   "location": "all",
+  "noSemicolon": true,
   "singleQuotes": true
 }
