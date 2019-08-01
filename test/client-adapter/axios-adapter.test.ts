@@ -256,16 +256,14 @@ describe('AxiosAdapter', () => {
 
     let called = false
 
-    const interceptErrorResponse = jest.fn((request: Request, response: Response) => {
+    const authMock: ResponseInterceptor = createMockInstance(Auth)
+    authMock.interceptResponse = jest.fn((request, response) => {
       if (!called) {
         called = true
         return true
       }
       return false
     })
-
-    const authMock: ResponseInterceptor = createMockInstance(Auth)
-    authMock.interceptResponse = interceptErrorResponse
     axiosAdapter.setupErrorResponseInterceptor(authMock)
 
     try {

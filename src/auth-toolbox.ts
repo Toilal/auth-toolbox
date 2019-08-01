@@ -212,6 +212,22 @@ export interface ResponseInterceptor {
   interceptResponse(request: Request, response: Response): boolean | Promise<boolean>
 }
 
+export type Method =
+  | 'get'
+  | 'GET'
+  | 'delete'
+  | 'DELETE'
+  | 'head'
+  | 'HEAD'
+  | 'options'
+  | 'OPTIONS'
+  | 'post'
+  | 'POST'
+  | 'put'
+  | 'PUT'
+  | 'patch'
+  | 'PATCH'
+
 /**
  * A simple HTTP request abstraction that aims to be common for any HTTP client.
  *
@@ -379,7 +395,7 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
  * ie: `{ method: 'POST', url: '/login' }`
  */
 export interface ServerEndpoint {
-  method: string
+  method: Method
   url: string
 }
 

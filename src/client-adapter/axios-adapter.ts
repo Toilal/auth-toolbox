@@ -57,9 +57,11 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
   }
 
   asRequest(request: AxiosRequestConfig): Request {
-    if (!request.url) throw new Error('No url is defined')
-    if (!request.method) throw new Error('No method is defined')
-    const r: Request = { url: request.url, method: request.method }
+    const url = request.url
+    const method = request.method
+    if (!url) throw new Error('No url is defined')
+    if (!method) throw new Error('No method is defined')
+    const r: Request = { url, method: method }
     if (request.data) {
       r.data = request.data
     }
@@ -93,7 +95,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
 
           const intercepted = await interceptor.interceptResponse(request, response)
           if (intercepted) {
-            error.config.baseURL = undefined // Workaround
+            delete error.config.baseURL // Workaround
             return this.axios.request(error.config)
           }
         }
