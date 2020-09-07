@@ -227,6 +227,10 @@ export type Method =
   | 'PUT'
   | 'patch'
   | 'PATCH'
+  | 'link'
+  | 'LINK'
+  | 'unlink'
+  | 'UNLINK'
 
 /**
  * A simple HTTP request abstraction that aims to be common for any HTTP client.
