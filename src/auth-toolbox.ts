@@ -227,6 +227,8 @@ export type Method =
   | 'PUT'
   | 'patch'
   | 'PATCH'
+  | 'purge'
+  | 'PURGE'
   | 'link'
   | 'LINK'
   | 'unlink'
