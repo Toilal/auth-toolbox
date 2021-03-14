@@ -104,7 +104,7 @@
     "@types/jest": "^26.0.20",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "^14.14.34",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "axios-mock-adapter": "^1.19.0",
     "barrelsby": "^2.2.0",
     "colors": "^1.4.0",
