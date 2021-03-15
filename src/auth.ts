@@ -382,13 +382,15 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
    */
   async logout(): Promise<R | void> {
     if (this.tokens) {
-      let response
+      let response: R | undefined
+      const tokens = this.tokens
+      await this.unsetTokensImplAsync()
+
       const serverConfiguration = await this.getServerConfiguration()
-      if (serverConfiguration.logoutEndpoint && this.tokens.refresh) {
-        const request = this.serverAdapter.asLogoutRequest(serverConfiguration.logoutEndpoint, this.tokens.refresh)
+      if (serverConfiguration.logoutEndpoint && tokens.refresh) {
+        const request = this.serverAdapter.asLogoutRequest(serverConfiguration.logoutEndpoint, tokens.refresh)
         response = await this.clientAdapter.logout(request)
       }
-      await this.unsetTokensImplAsync()
       this.listeners.forEach(l => l.logout && l.logout())
       return response
     }
