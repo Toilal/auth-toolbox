@@ -14,15 +14,15 @@ export class JwtTokenDecoder extends DefaultTokenDecoder implements TokenDecoder
    * @param expiredOffset Offset in millisecond to consider the token as expired.
    *                      use NaN to disable expiration from token decoding
    */
-  constructor(expiredOffset: number = 0) {
+  constructor (expiredOffset: number = 0) {
     super(expiredOffset)
   }
 
-  decode(token: Token): any {
+  decode (token: Token): any {
     return decode(token.value)
   }
 
-  isExpired(token: Token, offset?: number): boolean {
+  isExpired (token: Token, offset?: number): boolean {
     if (super.isExpired(token)) {
       return true
     }

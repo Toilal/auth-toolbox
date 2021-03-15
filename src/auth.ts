@@ -74,7 +74,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
    * @param clientAdapter       Client adapter to user.
    * @param options             Options
    */
-  constructor(
+  constructor (
     serverConfiguration: ServerConfiguration | Promise<ServerConfiguration>,
     serverAdapter: ServerAdapter<C>,
     clientAdapter: ClientAdapter<R>,
@@ -131,7 +131,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  get storageSync(): boolean {
+  get storageSync (): boolean {
     if (this.tokenStorageAsync && !this.tokenStorage) {
       return false
     }
@@ -146,7 +146,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  public async loadTokensFromStorageAsync(): Promise<Tokens<C> | undefined> {
+  public async loadTokensFromStorageAsync (): Promise<Tokens<C> | undefined> {
     if (this.tokenStorageAsync) {
       let tokens = await this.tokenStorageAsync.getTokens<C>()
       if (this.persistentTokenStorageAsync) {
@@ -178,7 +178,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  public loadTokensFromStorage(): Tokens<C> | undefined {
+  public loadTokensFromStorage (): Tokens<C> | undefined {
     if (this.tokenStorageAsync) {
       if (!this.tokenStorage) {
         throw new Error('tokenStorage is async. Use loadTokensFromStorageAsync method instead')
@@ -217,7 +217,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  release() {
+  release () {
     for (const handle of this.interceptors) {
       handle()
     }
@@ -228,14 +228,14 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  addListener(...listeners: AuthListener[]) {
+  addListener (...listeners: AuthListener[]) {
     this.listeners.push(...listeners)
   }
 
   /**
    * @inheritDoc
    */
-  removeListener(...listeners: AuthListener[]) {
+  removeListener (...listeners: AuthListener[]) {
     for (const listener of listeners) {
       const indexOf = this.listeners.indexOf(listener)
 
@@ -245,7 +245,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
-  public addExclude(...excludes: Exclude[]) {
+  public addExclude (...excludes: Exclude[]) {
     for (const exclude of excludes) {
       let excludeFunction: (request: Request, response?: Response) => boolean
 
@@ -264,14 +264,14 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  getTokens(): Tokens<C> | undefined {
+  getTokens (): Tokens<C> | undefined {
     return this.tokens
   }
 
   /**
    * @inheritDoc
    */
-  decodeAccessToken(): any | undefined {
+  decodeAccessToken (): any | undefined {
     if (this.tokens) {
       if (!this.accessTokenDecoder || !this.accessTokenDecoder.decode) {
         throw new Error('An accessTokenDecoder supporting decode method should be defined to decode access token.')
@@ -280,7 +280,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
-  isExpiredAccessToken(offset?: number): boolean | undefined {
+  isExpiredAccessToken (offset?: number): boolean | undefined {
     if (this.tokens) {
       if (!this.accessTokenDecoder || !this.accessTokenDecoder.isExpired) {
         throw new Error(
@@ -294,11 +294,11 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  isAuthenticated(): boolean {
+  isAuthenticated (): boolean {
     return !!this.tokens
   }
 
-  async getServerConfiguration(): Promise<ServerConfiguration> {
+  async getServerConfiguration (): Promise<ServerConfiguration> {
     if (!this.deferredServerConfiguration) {
       this.deferredServerConfiguration = await this.serverConfiguration
     }
@@ -308,18 +308,18 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  async login(credentials: C): Promise<R> {
+  async login (credentials: C): Promise<R> {
     const response = await this.loginImpl(credentials)
     this.listeners.forEach(l => l.login && l.login())
     return response
   }
 
-  private async loginImpl(credentials: C): Promise<R> {
+  private async loginImpl (credentials: C): Promise<R> {
     const serverConfiguration = await this.getServerConfiguration()
-    const request = this.serverAdapter.asLoginRequest(serverConfiguration.loginEndpoint, credentials)
+    const request = this.serverAdapter.asLoginRequest(serverConfiguration, credentials)
     const response = await this.clientAdapter.login(request)
     const tokens = this.serverAdapter.getResponseTokens(response)
-    if (this.usePersistentStorage && !serverConfiguration.renewEndpoint) {
+    if (this.usePersistentStorage && this.serverAdapter.shouldPersistCredentials(serverConfiguration)) {
       tokens.credentials = credentials
     }
     await this.setTokensImplAsync(tokens)
@@ -329,35 +329,35 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  async renew(): Promise<R | void> {
+  async renew (): Promise<R | void> {
     const serverConfiguration = await this.getServerConfiguration()
     if (this.tokens && serverConfiguration) {
       if (!this.renewRunning) {
         try {
           this.renewRunning = true
-          let response: R
-          if (serverConfiguration.renewEndpoint) {
-            if (!this.tokens.refresh) {
-              throw new Error('No refresh token available to renew')
-            }
-            const request = this.serverAdapter.asRenewRequest(serverConfiguration.renewEndpoint, this.tokens.refresh)
+          let response: R | undefined
+          const request = this.serverAdapter.asRenewRequest(serverConfiguration, this.tokens)
+          if (request) {
             response = await this.clientAdapter.renew(request)
-          } else {
-            if (!this.tokens.credentials) {
-              throw new Error(
-                'Credentials are not available. ' +
-                  'usePersistentStorage should be true to allow renew method without renewEndpoint and refresh token.'
-              )
-            }
+          }
+
+          if (!response && this.tokens.credentials) {
             response = await this.loginImpl(this.tokens.credentials)
           }
 
+          if (!response) {
+            throw new Error('Can\'t renew with the current state.')
+          }
+
           const tokens = this.serverAdapter.getResponseTokens(response)
+          tokens.credentials = this.tokens.credentials
           await this.setTokensImplAsync(tokens)
           for (const renewTokenPromise of this.renewPromises) {
             renewTokenPromise.resolve(response)
           }
+
           this.listeners.forEach(l => l.renew && l.renew())
+
           return response
         } catch (err) {
           for (const renewTokenPromise of this.renewPromises) {
@@ -380,28 +380,29 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  async logout(): Promise<R | void> {
-    if (this.tokens) {
-      let response: R | undefined
-      const tokens = this.tokens
-      await this.unsetTokensImplAsync()
+  async logout (): Promise<R | void> {
+    let response: R | undefined
 
-      const serverConfiguration = await this.getServerConfiguration()
-      if (serverConfiguration.logoutEndpoint && tokens.refresh) {
-        const request = this.serverAdapter.asLogoutRequest(serverConfiguration.logoutEndpoint, tokens.refresh)
-        response = await this.clientAdapter.logout(request)
-      }
-      this.listeners.forEach(l => l.logout && l.logout())
-      return response
+    const tokens = this.tokens
+    await this.unsetTokensImplAsync()
+
+    const serverConfiguration = await this.getServerConfiguration()
+    const request = this.serverAdapter.asLogoutRequest(serverConfiguration, tokens)
+    if (request) {
+      response = await this.clientAdapter.logout(request)
     }
+
+    this.listeners.forEach(l => l.logout && l.logout())
+
+    return response
   }
 
-  private initClientAdapter() {
+  private initClientAdapter () {
     this.interceptors.push(this.clientAdapter.setupRequestInterceptor(this))
     this.interceptors.push(this.clientAdapter.setupErrorResponseInterceptor(this))
   }
 
-  private async isLoginRequest(request: Request) {
+  private async isLoginRequest (request: Request) {
     const serverConfiguration = await this.getServerConfiguration()
     if (
       serverConfiguration.loginEndpoint &&
@@ -413,7 +414,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     return false
   }
 
-  private async isRenewRequest(request: Request) {
+  private async isRenewRequest (request: Request) {
     const serverConfiguration = await this.getServerConfiguration()
     if (
       serverConfiguration.renewEndpoint &&
@@ -425,14 +426,14 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     return false
   }
 
-  private async expired() {
+  private async expired () {
     if (this.tokens) {
       await this.unsetTokensImplAsync()
       this.listeners.forEach(l => l.expired && l.expired())
     }
   }
 
-  private async unsetTokensImplAsync() {
+  private async unsetTokensImplAsync () {
     this.tokens = undefined
     if (this.persistentTokenStorageAsync) {
       await this.persistentTokenStorageAsync.clear()
@@ -443,7 +444,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged())
   }
 
-  private async setTokensImplAsync(tokens: Tokens<C>) {
+  private async setTokensImplAsync (tokens: Tokens<C>) {
     if (this.tokenStorageAsync) {
       await this.tokenStorageAsync.store(tokens)
     }
@@ -458,7 +459,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged(this.tokens))
   }
 
-  private unsetTokensImpl() {
+  private unsetTokensImpl () {
     if (this.tokenStorageAsync) {
       if (!this.tokenStorage) {
         throw new Error('tokenStorage is async. Use setTokensAsync method instead')
@@ -475,7 +476,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     this.listeners.forEach(l => l.tokensChanged && l.tokensChanged())
   }
 
-  private setTokensImpl(tokens: Tokens<C>) {
+  private setTokensImpl (tokens: Tokens<C>) {
     if (this.tokenStorageAsync) {
       if (!this.tokenStorage) {
         throw new Error('tokenStorage is async. Use setTokensAsync method instead')
@@ -500,7 +501,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  public setTokens(tokens: Tokens<C> | undefined | null) {
+  public setTokens (tokens: Tokens<C> | undefined | null) {
     if (tokens) {
       this.setTokensImpl(tokens)
     } else {
@@ -511,7 +512,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  public async setTokensAsync(tokens: Tokens<C> | undefined | null) {
+  public async setTokensAsync (tokens: Tokens<C> | undefined | null) {
     if (tokens) {
       await this.setTokensImplAsync(tokens)
     } else {
@@ -519,7 +520,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
     }
   }
 
-  private isExcluded(request: Request, response?: Response): boolean {
+  private isExcluded (request: Request, response?: Response): boolean {
     for (const exclude of this.excludes) {
       if (exclude(request, response)) {
         return true
@@ -531,7 +532,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  async interceptRequest(request: Request) {
+  async interceptRequest (request: Request) {
     if (this.isExcluded(request)) {
       return false
     }
@@ -555,10 +556,10 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
           }
           tokens = this.getTokens()
         }
-        this.serverAdapter.setAccessToken(request, tokens!.access.value)
+        this.serverAdapter.configureRequest(request, tokens)
         return true
       } else {
-        this.serverAdapter.setAccessToken(request, tokens.access.value)
+        this.serverAdapter.configureRequest(request, tokens)
         if (
           this.accessTokenDecoder &&
           this.accessTokenDecoder.isExpired &&
@@ -575,7 +576,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
   /**
    * @inheritDoc
    */
-  async interceptResponse(request: Request, response: Response) {
+  async interceptResponse (request: Request, response: Response) {
     if (this.isExcluded(request, response)) {
       return false
     }
@@ -585,7 +586,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
 
     if (refreshToken) {
       const isRenewRequest = await this.isRenewRequest(request)
-      if (!isRenewRequest && this.serverAdapter.accessTokenHasExpired(request, response)) {
+      if (!isRenewRequest && this.serverAdapter.shouldRenew(request, response)) {
         try {
           await this.renew()
           return true
@@ -593,14 +594,14 @@ export class Auth<C = UsernamePasswordCredentials, R = any>
           await this.expired()
           return false
         }
-      } else if (isRenewRequest && this.serverAdapter.refreshTokenHasExpired(request, response)) {
+      } else if (isRenewRequest && this.serverAdapter.isExpired(request, response)) {
         await this.expired()
         return false
       }
 
       return false
     } else {
-      if (this.serverAdapter.accessTokenHasExpired(request, response)) {
+      if (this.serverAdapter.shouldRenew(request, response)) {
         await this.expired()
       }
       return false

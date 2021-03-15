@@ -1,4 +1,10 @@
-import { ClientAdapter, Request, RequestInterceptor, Response, ResponseInterceptor } from '../auth-toolbox'
+import {
+  ClientAdapter,
+  Request,
+  RequestInterceptor,
+  Response,
+  ResponseInterceptor
+} from '../auth-toolbox'
 import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 /**
@@ -10,39 +16,39 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
   private axios: AxiosInstance
   private config: AxiosRequestConfig
 
-  constructor(axios: AxiosInstance, config: AxiosRequestConfig = {}) {
+  constructor (axios: AxiosInstance, config: AxiosRequestConfig = {}) {
     this.axios = axios
     this.config = config
   }
 
-  login(request: Request): Promise<AxiosResponse> {
+  login (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  logout(request: Request): Promise<AxiosResponse> {
+  logout (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  renew(request: Request): Promise<AxiosResponse> {
+  renew (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  request(request: Request): Promise<AxiosResponse> {
+  request (request: Request): Promise<AxiosResponse> {
     return this.axios.request({
       ...request
     })
   }
 
-  asResponse(response: AxiosResponse): Response {
+  asResponse (response: AxiosResponse): Response {
     const r: Response = {}
     if (response.data) {
       r.data = response.data
@@ -56,7 +62,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     return r
   }
 
-  asRequest(request: AxiosRequestConfig): Request {
+  asRequest (request: AxiosRequestConfig): Request {
     const url = request.url
     const method = request.method
     if (!url) throw new Error('No url is defined')
@@ -71,7 +77,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     return r
   }
 
-  setupRequestInterceptor(interceptor: RequestInterceptor) {
+  setupRequestInterceptor (interceptor: RequestInterceptor) {
     const id = this.axios.interceptors.request.use(async config => {
       const request = this.asRequest(config)
 
@@ -85,7 +91,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     return () => this.axios.interceptors.request.eject(id)
   }
 
-  setupErrorResponseInterceptor(interceptor: ResponseInterceptor) {
+  setupErrorResponseInterceptor (interceptor: ResponseInterceptor) {
     const id = this.axios.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {

@@ -888,7 +888,7 @@ describe('Auth', () => {
     } catch (e) {
       expect(() => {
         throw e
-      }).toThrow('No refresh token available to renew')
+      }).toThrow('Can\'t renew with the current state.')
     }
 
     return null
@@ -1720,7 +1720,7 @@ describe('Auth', () => {
       expect(() => {
         throw e
       }).toThrow(
-        'Credentials are not available. usePersistentStorage should be true to allow renew method without renewEndpoint and refresh token.'
+        'Can\'t renew with the current state.'
       )
     }
     await auth.logout()

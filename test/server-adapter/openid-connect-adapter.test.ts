@@ -1,8 +1,16 @@
-import { OpenidConnectAdapter, LoginResponse, openidConnectDiscovery, AxiosAdapter, Request, Response } from '../../src'
+import {
+  AxiosAdapter,
+  LoginResponse,
+  OpenidConnectAdapter,
+  openidConnectDiscovery,
+  Request,
+  Response
+} from '../../src'
 
 import axios from 'axios'
 import { advanceTo, clear } from 'jest-date-mock'
 import MockAdapter from 'axios-mock-adapter'
+import { ServerConfiguration, Tokens } from '../../dist/lib'
 
 describe('Openid Connect Adapter - Discovery', () => {
   it('build configuration from /.well-known/openid-configuration', async () => {
@@ -45,15 +53,19 @@ describe('Openid Connect Adapter', () => {
   it('adapts login request', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const method = 'POST'
-    const url = 'url'
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: {
+        method: 'POST',
+        url: 'url'
+      }
+    }
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
     const username = 'testUsername'
     const password = 'testPassword'
 
-    const loginRequest = adapter.asLoginRequest({ url, method }, { username, password })
-    expect(loginRequest.method).toBe(method)
-    expect(loginRequest.url).toBe(url)
+    const loginRequest = adapter.asLoginRequest(serverConfiguration, { username, password })
+    expect(loginRequest.method).toBe(serverConfiguration.loginEndpoint.method)
+    expect(loginRequest.url).toBe(serverConfiguration.loginEndpoint.url)
     expect(loginRequest.headers).toEqual(headers)
     expect(loginRequest.data).toBe(`grant_type=password&username=${username}&password=${password}`)
   })
@@ -61,31 +73,64 @@ describe('Openid Connect Adapter', () => {
   it('adapts logout request', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const method = 'POST'
-    const url = 'url'
-    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const refresh = { value: 'testRefreshToken' }
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: {
+        method: 'POST',
+        url: 'loginUrl'
+      },
+      logoutEndpoint: {
+        method: 'POST',
+        url: 'logoutUrl'
+      }
+    }
 
-    const loginRequest = adapter.asLogoutRequest({ url, method }, refresh)
-    expect(loginRequest.method).toBe(method)
-    expect(loginRequest.url).toBe(url)
-    expect(loginRequest.headers).toEqual(headers)
-    expect(loginRequest.data).toBe(`refresh_token=${refresh.value}`)
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+    const tokens: Tokens = {
+      access: {
+        value: 'testAccessToken'
+      },
+      refresh: {
+        value: 'testRefreshToken'
+      }
+    }
+
+    const logoutRequest = adapter.asLogoutRequest(serverConfiguration, tokens)
+    expect(logoutRequest).not.toBeFalsy()
+    if (logoutRequest) {
+      expect(logoutRequest.method).toBe(serverConfiguration.logoutEndpoint!.method)
+      expect(logoutRequest.url).toBe(serverConfiguration.logoutEndpoint!.url)
+      expect(logoutRequest.headers).toEqual(headers)
+      expect(logoutRequest.data).toBe(`refresh_token=${tokens.refresh!.value}`)
+    }
   })
 
   it('adapts renew request', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const method = 'POST'
-    const url = 'url'
-    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const refresh = { value: 'testRefreshToken' }
+    const serverConfiguration: ServerConfiguration = {
+      loginEndpoint: {
+        method: 'POST',
+        url: 'loginUrl'
+      }
+    }
 
-    const loginRequest = adapter.asRenewRequest({ url, method }, refresh)
-    expect(loginRequest.method).toBe(method)
-    expect(loginRequest.url).toBe(url)
-    expect(loginRequest.headers).toEqual(headers)
-    expect(loginRequest.data).toBe(`grant_type=refresh_token&refresh_token=${refresh.value}`)
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+    const tokens: Tokens = {
+      access: {
+        value: 'testAccessToken'
+      },
+      refresh: {
+        value: 'testRefreshToken'
+      }
+    }
+
+    const renewRequest = adapter.asRenewRequest(serverConfiguration, tokens)
+    if (renewRequest) {
+      expect(renewRequest.method).toBe(serverConfiguration.renewEndpoint!.method)
+      expect(renewRequest.url).toBe(serverConfiguration.renewEndpoint!.url)
+      expect(renewRequest.headers).toEqual(headers)
+      expect(renewRequest.data).toBe(`grant_type=refresh_token&refresh_token=${tokens.refresh!.value}`)
+    }
   })
 
   it('retrieves tokens from response without expires', () => {
@@ -141,22 +186,33 @@ describe('Openid Connect Adapter', () => {
     const adapter = new OpenidConnectAdapter()
 
     const request: Request = { method: 'GET', url: 'url' }
-    const accessToken = 'testAccessToken'
+    const tokens: Tokens = {
+      access: {
+        value: 'testAccessToken'
+      }
+    }
 
-    adapter.setAccessToken(request, accessToken)
+    adapter.configureRequest(request, tokens)
 
-    expect(request.headers).toEqual({ Authorization: `Bearer ${accessToken}` })
+    expect(request.headers).toEqual({ Authorization: `Bearer ${tokens.access.value}` })
   })
 
   it('set access token on request with custom headers', () => {
     const adapter = new OpenidConnectAdapter()
 
     const request: Request = { method: 'GET', url: 'url', headers: { dummy: 'testDummy' } }
-    const accessToken = 'testAccessToken'
+    const tokens: Tokens = {
+      access: {
+        value: 'testAccessToken'
+      }
+    }
 
-    adapter.setAccessToken(request, accessToken)
+    adapter.configureRequest(request, tokens)
 
-    expect(request.headers).toEqual({ Authorization: `Bearer ${accessToken}`, dummy: 'testDummy' })
+    expect(request.headers).toEqual({
+      Authorization: `Bearer ${tokens.access.value}`,
+      dummy: 'testDummy'
+    })
   })
 
   it('accessTokenHasExpired returns false when authorization header is not present in request', () => {
@@ -165,7 +221,7 @@ describe('Openid Connect Adapter', () => {
     const request: Request = { method: 'GET', url: 'url' }
     const response: Response = { status: 401, data: { error: 'invalid_token' } }
 
-    const expired = adapter.accessTokenHasExpired(request, response)
+    const expired = adapter.shouldRenew(request, response)
     expect(expired).toBeFalsy()
   })
 
@@ -179,7 +235,7 @@ describe('Openid Connect Adapter', () => {
     }
     const response: Response = { status: 401, data: { error: 'invalid_token' } }
 
-    const expired = adapter.accessTokenHasExpired(request, response)
+    const expired = adapter.shouldRenew(request, response)
     expect(expired).toBeTruthy()
   })
 
@@ -189,7 +245,7 @@ describe('Openid Connect Adapter', () => {
     const request: Request = { method: 'GET', url: 'url' }
     const response: Response = { status: 400, data: { error: 'invalid_grant' } }
 
-    const expired = adapter.refreshTokenHasExpired(request, response)
+    const expired = adapter.isExpired(request, response)
     expect(expired).toBeFalsy()
   })
 
@@ -203,7 +259,7 @@ describe('Openid Connect Adapter', () => {
     }
     const response: Response = { status: 400, data: { error: 'invalid_grant' } }
 
-    const expired = adapter.refreshTokenHasExpired(request, response)
+    const expired = adapter.isExpired(request, response)
     expect(expired).toBeTruthy()
   })
 })

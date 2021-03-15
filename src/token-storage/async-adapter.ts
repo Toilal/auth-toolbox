@@ -7,27 +7,27 @@ export class TokenStorageAsyncAdapter implements TokenStorageAsync {
 
   private tokenStorage: TokenStorage
 
-  constructor(tokenStorage: TokenStorage, syncAvailable: boolean = true) {
+  constructor (tokenStorage: TokenStorage, syncAvailable: boolean = true) {
     this.tokenStorage = tokenStorage
     if (syncAvailable) {
       this.sync = tokenStorage
     }
   }
 
-  async clear(): Promise<void> {
+  async clear (): Promise<void> {
     return this.tokenStorage.clear()
   }
 
-  async getTokens<C>(): Promise<Tokens<C> | undefined> {
+  async getTokens<C> (): Promise<Tokens<C> | undefined> {
     return this.tokenStorage.getTokens<C>()
   }
 
-  async store<C>(tokens: Tokens<C>): Promise<void> {
+  async store<C> (tokens: Tokens<C>): Promise<void> {
     return this.tokenStorage.store<C>(tokens)
   }
 }
 
-export function toTokenStorageSync(
+export function toTokenStorageSync (
   tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
 ): TokenStorage | null | undefined {
   if (!tokenStorage) {
@@ -39,7 +39,7 @@ export function toTokenStorageSync(
   return tokenStorage.sync
 }
 
-export function toTokenStorageAsync(
+export function toTokenStorageAsync (
   tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
 ): TokenStorageAsync | null | undefined {
   if (!tokenStorage) {

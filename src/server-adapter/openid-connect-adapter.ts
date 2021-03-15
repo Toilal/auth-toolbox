@@ -4,8 +4,6 @@ import {
   Response,
   ServerAdapter,
   ServerConfiguration,
-  ServerEndpoint,
-  Token,
   Tokens,
   UsernamePasswordCredentials
 } from '../auth-toolbox'
@@ -35,7 +33,7 @@ export interface OpenidConfiguration {
  * @param client client adapter to request discovery endpoint with.
  * @param issuerUrl url of the authentication realm (without `/.well-known/openid-configuration`).
  */
-export async function openidConnectDiscovery<R>(
+export async function openidConnectDiscovery<R> (
   client: ClientAdapter<R>,
   issuerUrl: string
 ): Promise<ServerConfiguration> {
@@ -57,7 +55,7 @@ export async function openidConnectDiscovery<R>(
  * {@link Auth} constructor.
  */
 export class OpenidConnectAdapter implements ServerAdapter {
-  asLoginRequest(loginEndpoint: ServerEndpoint, credentials: UsernamePasswordCredentials): Request {
+  asLoginRequest (serverConfiguration: ServerConfiguration, credentials: UsernamePasswordCredentials): Request {
     const rawData = {
       grant_type: 'password',
       username: credentials.username,
@@ -67,40 +65,52 @@ export class OpenidConnectAdapter implements ServerAdapter {
     const data = stringify(rawData)
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
 
-    return { ...loginEndpoint, data, headers }
+    return { ...serverConfiguration.loginEndpoint, data, headers }
   }
 
-  asLogoutRequest(logoutEndpoint: ServerEndpoint, refreshToken: Token): Request {
-    const rawData = {
-      refresh_token: refreshToken.value
+  asLogoutRequest (serverConfiguration: ServerConfiguration, tokens: Tokens | undefined): Request | null {
+    if (serverConfiguration.logoutEndpoint && tokens && tokens.refresh) {
+      const rawData = {
+        refresh_token: tokens.refresh.value
+      }
+
+      const data = stringify(rawData)
+      const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+
+      return { ...serverConfiguration.logoutEndpoint, data, headers }
     }
 
-    const data = stringify(rawData)
-    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-
-    return { ...logoutEndpoint, data, headers }
+    return null
   }
 
-  asRenewRequest(renewEndpoint: ServerEndpoint, refreshToken: Token): Request {
-    const rawData = {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken.value
+  asRenewRequest (serverConfiguration: ServerConfiguration, tokens: Tokens | undefined): Request | null {
+    if (serverConfiguration.renewEndpoint && tokens && tokens.refresh) {
+      const rawData = {
+        grant_type: 'refresh_token',
+        refresh_token: tokens.refresh.value
+      }
+
+      const data = stringify(rawData)
+      const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+
+      return { ...serverConfiguration.renewEndpoint, data, headers }
     }
 
-    const data = stringify(rawData)
-    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
-
-    return { ...renewEndpoint, data, headers }
+    return null
   }
 
-  getResponseTokens(response: Response): Tokens<UsernamePasswordCredentials> {
+  shouldPersistCredentials (serverConfiguration: ServerConfiguration): boolean {
+    return !serverConfiguration.renewEndpoint
+  }
+
+  getResponseTokens (response: Response): Tokens {
     const loginResponse: LoginResponse = response.data
 
     if (!loginResponse.access_token) {
       throw new Error('No access token found in response')
     }
 
-    const tokens: Tokens<UsernamePasswordCredentials> = {
+    const tokens: Tokens = {
       access: { value: loginResponse.access_token }
     }
 
@@ -123,14 +133,16 @@ export class OpenidConnectAdapter implements ServerAdapter {
     return tokens
   }
 
-  setAccessToken(request: Request, accessToken: string): void {
-    if (!request.headers) {
-      request.headers = {}
+  configureRequest (request: Request, tokens: Tokens): void {
+    if (tokens && tokens.access) {
+      if (!request.headers) {
+        request.headers = {}
+      }
+      request.headers.Authorization = 'Bearer ' + tokens.access.value
     }
-    request.headers.Authorization = 'Bearer ' + accessToken
   }
 
-  accessTokenHasExpired(request: Request, response: Response): boolean {
+  shouldRenew (request: Request, response: Response): boolean {
     return (
       !!request.headers &&
       !!request.headers.Authorization &&
@@ -139,7 +151,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
     )
   }
 
-  refreshTokenHasExpired(request: Request, response: Response): boolean {
+  isExpired (request: Request, response: Response): boolean {
     return (
       !!request.headers &&
       !!request.headers.Authorization &&

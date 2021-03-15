@@ -16,7 +16,7 @@ export class DefaultTokenStorage implements TokenStorage {
   private expiresAtSuffix: string
   private credentialsTokenStorageKey: string
 
-  constructor(
+  constructor (
     storage: Storage,
     accessTokenStorageKey = 'auth.accessToken',
     refreshTokenStorageKey = 'auth.refreshToken',
@@ -30,7 +30,7 @@ export class DefaultTokenStorage implements TokenStorage {
     this.credentialsTokenStorageKey = credentialsTokenStorageKey
   }
 
-  store<C>(tokens: Tokens<C>): any {
+  store<C> (tokens: Tokens<C>): any {
     this.storage.setItem(this.accessTokenStorageKey, tokens.access.value)
 
     if (tokens.access.expiresAt) {
@@ -64,7 +64,7 @@ export class DefaultTokenStorage implements TokenStorage {
     }
   }
 
-  clear(): any {
+  clear (): any {
     this.storage.removeItem(this.accessTokenStorageKey)
     this.storage.removeItem(this.refreshTokenStorageKey)
 
@@ -74,7 +74,7 @@ export class DefaultTokenStorage implements TokenStorage {
     this.storage.removeItem(this.credentialsTokenStorageKey)
   }
 
-  getTokens<C>(): Tokens<C> | undefined {
+  getTokens<C> (): Tokens<C> | undefined {
     const accessTokenStr = this.storage.getItem(this.accessTokenStorageKey)
     const refreshTokenStr = this.storage.getItem(this.refreshTokenStorageKey)
     const accessTokenExpiresAtStr = this.storage.getItem(this.accessTokenStorageKey + this.expiresAtSuffix)
