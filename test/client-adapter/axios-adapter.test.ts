@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Auth, AxiosAdapter, Request, RequestInterceptor, ResponseInterceptor } from '../../src'
 import MockAdapter from 'axios-mock-adapter'
-import createMockInstance from 'jest-create-mock-instance'
+import { createMockInstance } from '../utils'
 
 describe('AxiosAdapter', () => {
   it('perform login request', async () => {
