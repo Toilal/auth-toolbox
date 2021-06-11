@@ -20,7 +20,7 @@ describe('toTokenStorageAsync', () => {
     expect(tokenStorage).toBeDefined()
     expect(tokenStorage).not.toBeNull()
 
-    if (tokenStorage) {
+    if (tokenStorage != null) {
       expect(syncTokenStorage.async).toBe(false)
       expect(tokenStorage.async).toBe(true)
       expect(tokenStorage.sync).toBe(syncTokenStorage)
@@ -67,23 +67,19 @@ describe('toTokenStorageSync', () => {
   })
 
   it('converts async tokenStorage to syncTokenStorage if sync is defined', () => {
-    const tokens: Tokens = {
-      access: { value: 'accessTokenValue' }
-    }
-
     const syncTokenStorage = new DefaultTokenStorage(sessionStorage)
     const asyncTokenStorage = toTokenStorageAsync(syncTokenStorage)
 
     expect(asyncTokenStorage).toBeDefined()
     expect(asyncTokenStorage).not.toBeNull()
 
-    if (asyncTokenStorage) {
+    if (asyncTokenStorage != null) {
       const tokenStorage = toTokenStorageSync(asyncTokenStorage)
 
       expect(tokenStorage).toBeDefined()
       expect(tokenStorage).not.toBeNull()
 
-      if (tokenStorage) {
+      if (tokenStorage != null) {
         expect(tokenStorage).toBe(syncTokenStorage)
       }
     }

@@ -13,37 +13,37 @@ import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'ax
  * It should be given to {@link Auth} constructor.
  */
 export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
-  private axios: AxiosInstance
-  private config: AxiosRequestConfig
+  private readonly axios: AxiosInstance
+  private readonly config: AxiosRequestConfig
 
   constructor (axios: AxiosInstance, config: AxiosRequestConfig = {}) {
     this.axios = axios
     this.config = config
   }
 
-  login (request: Request): Promise<AxiosResponse> {
-    return this.axios.request({
+  async login (request: Request): Promise<AxiosResponse> {
+    return await this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  logout (request: Request): Promise<AxiosResponse> {
-    return this.axios.request({
+  async logout (request: Request): Promise<AxiosResponse> {
+    return await this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  renew (request: Request): Promise<AxiosResponse> {
-    return this.axios.request({
+  async renew (request: Request): Promise<AxiosResponse> {
+    return await this.axios.request({
       ...this.config,
       ...request
     })
   }
 
-  request (request: Request): Promise<AxiosResponse> {
-    return this.axios.request({
+  async request (request: Request): Promise<AxiosResponse> {
+    return await this.axios.request({
       ...request
     })
   }
@@ -77,7 +77,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     return r
   }
 
-  setupRequestInterceptor (interceptor: RequestInterceptor) {
+  setupRequestInterceptor (interceptor: RequestInterceptor): () => void {
     const id = this.axios.interceptors.request.use(async config => {
       const request = this.asRequest(config)
 
@@ -91,18 +91,18 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     return () => this.axios.interceptors.request.eject(id)
   }
 
-  setupErrorResponseInterceptor (interceptor: ResponseInterceptor) {
+  setupErrorResponseInterceptor (interceptor: ResponseInterceptor): () => void {
     const id = this.axios.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
-        if (error.response) {
+        if (error.response != null) {
           const request = this.asRequest(error.config)
           const response = this.asResponse(error.response)
 
           const intercepted = await interceptor.interceptResponse(request, response)
           if (intercepted) {
             delete error.config.baseURL // Workaround
-            return this.axios.request(error.config)
+            return await this.axios.request(error.config)
           }
         }
 

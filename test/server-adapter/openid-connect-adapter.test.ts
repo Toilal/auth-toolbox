@@ -97,7 +97,7 @@ describe('Openid Connect Adapter', () => {
 
     const logoutRequest = adapter.asLogoutRequest(serverConfiguration, tokens)
     expect(logoutRequest).not.toBeFalsy()
-    if (logoutRequest) {
+    if (logoutRequest != null) {
       expect(logoutRequest.method).toBe(serverConfiguration.logoutEndpoint!.method)
       expect(logoutRequest.url).toBe(serverConfiguration.logoutEndpoint!.url)
       expect(logoutRequest.headers).toEqual(headers)
@@ -126,7 +126,7 @@ describe('Openid Connect Adapter', () => {
     }
 
     const renewRequest = adapter.asRenewRequest(serverConfiguration, tokens)
-    if (renewRequest) {
+    if (renewRequest != null) {
       expect(renewRequest.method).toBe(serverConfiguration.renewEndpoint!.method)
       expect(renewRequest.url).toBe(serverConfiguration.renewEndpoint!.url)
       expect(renewRequest.headers).toEqual(headers)
@@ -137,32 +137,32 @@ describe('Openid Connect Adapter', () => {
   it('retrieves tokens from response without expires', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const response: Response = {
+    const response: Response<LoginResponse> = {
       data: {
         access_token: 'accessToken',
         refresh_token: 'refreshToken'
-      } as LoginResponse
+      }
     }
 
     const tokens = adapter.getResponseTokens(response)
 
-    expect(tokens.access).toEqual({ value: response.data.access_token })
+    expect(tokens.access).toEqual({ value: response.data!.access_token })
     expect(tokens.refresh).toBeDefined()
-    if (tokens.refresh) {
-      expect(tokens.refresh).toEqual({ value: response.data.refresh_token })
+    if (tokens.refresh != null) {
+      expect(tokens.refresh).toEqual({ value: response.data!.refresh_token })
     }
   })
 
   it('retrieves tokens from response with expires', () => {
     const adapter = new OpenidConnectAdapter()
 
-    const response: Response = {
+    const response: Response<LoginResponse> = {
       data: {
         access_token: 'accessToken',
         refresh_token: 'refreshToken',
         expires_in: 30,
         refresh_expires_in: 45
-      } as LoginResponse
+      }
     }
 
     const tokens = adapter.getResponseTokens(response)
@@ -170,14 +170,14 @@ describe('Openid Connect Adapter', () => {
     const expiresAt = new Date()
     const refreshExpiresAt = new Date()
 
-    expiresAt.setSeconds(expiresAt.getSeconds() + response.data.expires_in)
-    refreshExpiresAt.setSeconds(refreshExpiresAt.getSeconds() + response.data.refresh_expires_in)
+    expiresAt.setSeconds(expiresAt.getSeconds() + response.data!.expires_in!)
+    refreshExpiresAt.setSeconds(refreshExpiresAt.getSeconds() + response.data!.refresh_expires_in!)
 
-    expect(tokens.access).toEqual({ value: response.data.access_token, expiresAt })
+    expect(tokens.access).toEqual({ value: response.data!.access_token, expiresAt })
     expect(tokens.refresh).toBeDefined()
-    if (tokens.refresh) {
+    if (tokens.refresh != null) {
       expect(tokens.refresh).toEqual({
-        value: response.data.refresh_token,
+        value: response.data!.refresh_token,
         expiresAt: refreshExpiresAt
       })
     }

@@ -4,7 +4,6 @@ import {
   AxiosAdapter,
   DefaultTokenStorage,
   JwtTokenDecoder,
-  LoginResponse,
   OpenidConnectAdapter,
   Request,
   Response,
@@ -48,7 +47,7 @@ describe('Auth', () => {
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
-    if (token) {
+    if (token != null) {
       expect(token.access.value).toBe('accessTokenValue')
       expect(token.refresh).toBeUndefined()
     }
@@ -91,7 +90,7 @@ describe('Auth', () => {
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
-    if (token) {
+    if (token != null) {
       expect(token.access.value).toBe('accessTokenValue')
       expect(token.refresh).toBeUndefined()
     }
@@ -115,7 +114,7 @@ describe('Auth', () => {
 
     const token = auth.getTokens()
     expect(token).toBeDefined()
-    if (token) {
+    if (token != null) {
       expect(token.access.value).toBe('accessTokenValue')
       expect(token.refresh).toBeUndefined()
     }
@@ -138,13 +137,13 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const listener: AuthListener = {
-      initialized(loaded: boolean, err: any) {
+      initialized (loaded, err) {
         expect(loaded).toBeTruthy()
         expect(err).toBeUndefined()
 
         const token = auth.getTokens()
         expect(token).toBeDefined()
-        if (token) {
+        if (token != null) {
           expect(token.access.value).toBe('accessTokenValue')
           expect(token.refresh).toBeUndefined()
         }
@@ -174,7 +173,7 @@ describe('Auth', () => {
     class FailingTokenStorage implements TokenStorage {
       readonly async = false
 
-      clear(): void {
+      clear (): void {
         throw new Error('!FailingTokenStorage!')
       }
 
@@ -193,7 +192,7 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const listener: AuthListener = {
-      initialized(loaded: boolean, err: any) {
+      initialized (loaded, err) {
         expect(loaded).toBeFalsy()
         expect(err).toBeInstanceOf(Error)
 
@@ -201,7 +200,8 @@ describe('Auth', () => {
       }
     }
 
-    const auth = new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
+    // eslint-disable-next-line no-new
+    new Auth(serverConfiguration, openidConnectAdapter, axiosAdapter, {
       tokenStorage,
       persistentTokenStorage,
       loadTokensFromStorage: true,
@@ -354,10 +354,10 @@ describe('Auth', () => {
     const tokens = auth.getTokens()
 
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.access.value).toEqual('accessTokenValue')
       expect(tokens.refresh).toBeDefined()
-      if (tokens.refresh) {
+      if (tokens.refresh != null) {
         expect(tokens.refresh.value).toEqual('refreshTokenValue')
       }
     }
@@ -538,7 +538,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -595,7 +595,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -620,7 +620,7 @@ describe('Auth', () => {
     expect(auth.usePersistentStorage).toBeTruthy()
     let tokens = auth.getTokens()
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.credentials).toBeUndefined()
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
@@ -631,7 +631,7 @@ describe('Auth', () => {
 
     tokens = auth.getTokens()
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.credentials).toBeUndefined()
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
@@ -647,7 +647,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -669,7 +669,7 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     let tokens = auth.getTokens()
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.credentials).toBeDefined()
     }
     expect(localStorage.getItem('auth.credentials')).not.toBeNull()
@@ -683,7 +683,7 @@ describe('Auth', () => {
 
     tokens = auth.getTokens()
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.credentials).toBeUndefined()
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
@@ -699,7 +699,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -755,7 +755,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
 
     const openidConnectAdapter = new OpenidConnectAdapter()
@@ -813,11 +813,11 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('renew').reply(200, {
       access_token: 'accessTokenValueRenew',
       refresh_token: 'refreshTokenValueRenew'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -869,7 +869,7 @@ describe('Auth', () => {
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -902,11 +902,11 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('renew').reply(200, {
       access_token: 'accessTokenValueRenew',
       refresh_token: 'refreshTokenValueRenew'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -959,7 +959,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('renew').reply(400, {
       error: 'invalid_grant'
     })
@@ -1036,7 +1036,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1055,7 +1055,7 @@ describe('Auth', () => {
     }
 
     const accessTokenDecoder: TokenDecoder = {
-      isExpired(token: Token) {
+      isExpired (token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
@@ -1101,7 +1101,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1119,7 +1119,7 @@ describe('Auth', () => {
     }
 
     const accessTokenDecoder: TokenDecoder = {
-      isExpired(token: Token) {
+      isExpired (token: Token) {
         return token.value === 'accessTokenValue'
       }
     }
@@ -1166,7 +1166,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1227,7 +1227,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1285,7 +1285,7 @@ describe('Auth', () => {
           200,
           {
             access_token: 'accessTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1342,7 +1342,7 @@ describe('Auth', () => {
           200,
           {
             access_token: 'accessTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1359,7 +1359,7 @@ describe('Auth', () => {
     }
 
     class ExpiredTokenDecoder implements TokenDecoder {
-      isExpired(token: Token): boolean {
+      isExpired (token: Token): boolean {
         return true
       }
     }
@@ -1406,7 +1406,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1467,7 +1467,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1528,7 +1528,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1589,7 +1589,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1653,7 +1653,7 @@ describe('Auth', () => {
           {
             access_token: 'accessTokenValue',
             refresh_token: 'refreshTokenValue'
-          } as LoginResponse
+          }
         ]
       } else {
         return [401]
@@ -1697,7 +1697,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
 
     const openidConnectAdapter = new OpenidConnectAdapter()
@@ -1741,12 +1741,12 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
     axiosMock.onPost('renew').reply(200, {
       access_token: 'accessTokenValueRenew',
       refresh_token: 'refreshTokenValueRenew'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const serverConfiguration: ServerConfiguration = {
@@ -1776,12 +1776,12 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
     axiosMock.onPost('renew').reply(200, {
       access_token: 'accessTokenValueRenew',
       refresh_token: 'refreshTokenValueRenew'
-    } as LoginResponse)
+    })
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const asyncServerConfiguration: Promise<ServerConfiguration> = new Promise(resolve => {
@@ -1808,7 +1808,9 @@ describe('Auth', () => {
     const axiosInstance = axios.create()
     const axiosAdapter = new AxiosAdapter(axiosInstance)
 
+    /*
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
+    */
 
     const openidConnectAdapter = new OpenidConnectAdapter()
     const asyncServerConfiguration: Promise<ServerConfiguration> = new Promise(resolve => {
@@ -1843,7 +1845,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
 
     const openidConnectAdapter = new OpenidConnectAdapter()
@@ -1871,7 +1873,7 @@ describe('Auth', () => {
     axiosMock.onPost('login').reply(200, {
       access_token: 'accessTokenValue',
       refresh_token: 'refreshTokenValue'
-    } as LoginResponse)
+    })
     axiosMock.onPost('logout').reply(200)
 
     const openidConnectAdapter = new OpenidConnectAdapter()

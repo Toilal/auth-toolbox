@@ -14,7 +14,7 @@ export class DefaultTokenDecoder implements TokenDecoder {
   }
 
   isExpired (token: Token): boolean {
-    if (token.expiresAt) {
+    if (token.expiresAt != null) {
       const now = new Date().getTime() - this.offset
       if (now >= token.expiresAt.getTime()) {
         return true

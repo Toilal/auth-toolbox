@@ -30,19 +30,19 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @see {@link storageSync}
    *
    */
-  loadTokensFromStorage (): Tokens<C> | undefined
+  loadTokensFromStorage: () => Tokens<C> | undefined
 
   /**
    * Load tokens from storage asynchronously.
    *
    * @return Loaded tokens
    */
-  loadTokensFromStorageAsync (): Promise<Tokens<C> | undefined>
+  loadTokensFromStorageAsync: () => Promise<Tokens<C> | undefined>
 
   /**
    * Release any resource associated with IAuth
    */
-  release (): void
+  release: () => void
 
   /**
    * Authenticate the user with given credentials.
@@ -53,7 +53,7 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @throws Error if fail to renew tokens.
    *
    */
-  login (credentials: C): Promise<R>
+  login: (credentials: C) => Promise<R>
 
   /**
    * Forget the user authentication.
@@ -61,7 +61,7 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @return Client response if it has occured.
    * @throws Error if fail to renew tokens.
    */
-  logout (): Promise<R | void>
+  logout: () => Promise<R | undefined>
 
   /**
    * Renew tokens.
@@ -69,14 +69,14 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @return Client response if it has occured.
    * @throws Error if fail to renew tokens.
    */
-  renew (): Promise<R | void>
+  renew: () => Promise<R | undefined>
 
   /**
    * Get current stored tokens.
    *
    * @return current stored tokens.
    */
-  getTokens (): Tokens<C> | undefined
+  getTokens: () => Tokens<C> | undefined
 
   /**
    * Manually store tokens synchronously. It may be used to authenticated a user with a token
@@ -86,7 +86,7 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @throws Error when underlying storage is not synchronous.
    * @see {@link storageSync}
    */
-  setTokens (tokens: Tokens<C> | undefined | null): void
+  setTokens: (tokens: Tokens<C> | undefined | null) => void
 
   /**
    * Manually store tokens asynchronously. It may be used to authenticated a user with a token
@@ -94,21 +94,21 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    *
    * @param tokens Tokens to save.
    */
-  setTokensAsync (tokens: Tokens<C> | undefined | null): Promise<void>
+  setTokensAsync: (tokens: Tokens<C> | undefined | null) => Promise<void>
 
   /**
    * Decode the access token from Tokens if defined.
    *
    * @return The decoded access token payload.
    */
-  decodeAccessToken (): any | undefined
+  decodeAccessToken: () => any | undefined
 
   /**
    * Check if access token has expired.
    *
    * @param offset Offset in millisecond to apply on browser current date.
    */
-  isExpiredAccessToken (offset?: number): boolean | undefined
+  isExpiredAccessToken: (offset?: number) => boolean | undefined
 
   /**
    * Check if user is authenticated.
@@ -116,28 +116,28 @@ export interface IAuth<C = UsernamePasswordCredentials, R = any> {
    * @return true if user is authenticated.
    *
    */
-  isAuthenticated (): boolean
+  isAuthenticated: () => boolean
 
   /**
    * Add a request type to be excluded from authentication interceptors.
    *
    * @param excludes
    */
-  addExclude (...excludes: Exclude[]): void
+  addExclude: (...excludes: Exclude[]) => void
 
   /**
    * Add one or more listeners.
    *
    * @param listeners
    */
-  addListener (...listeners: AuthListener[]): void
+  addListener: (...listeners: AuthListener[]) => void
 
   /**
    * Remove one or more listeners.
    *
    * @param listeners
    */
-  removeListener (...listeners: AuthListener[]): void
+  removeListener: (...listeners: AuthListener[]) => void
 }
 
 /**
@@ -200,7 +200,7 @@ export interface AuthOptions {
  * It check Tokens expiration and handle {@link Tokens} renewal if required.
  */
 export interface RequestInterceptor {
-  interceptRequest (request: Request): boolean | Promise<boolean>
+  interceptRequest: (request: Request) => boolean | Promise<boolean>
 }
 
 /**
@@ -209,7 +209,7 @@ export interface RequestInterceptor {
  * It check server response and handle {@link Tokens} renewal if required.
  */
 export interface ResponseInterceptor {
-  interceptResponse (request: Request, response: Response): boolean | Promise<boolean>
+  interceptResponse: (request: Request, response: Response) => boolean | Promise<boolean>
 }
 
 export type Method =
@@ -249,8 +249,8 @@ export interface Request extends ServerEndpoint {
  *
  * @see {@link ClientAdapter}
  */
-export interface Response {
-  data?: any
+export interface Response<D = any> {
+  data?: D
   headers?: { [key: string]: string }
   status?: number
 }
@@ -274,35 +274,35 @@ export interface ClientAdapter<R = any> {
    *
    * @param request
    */
-  login (request: Request): Promise<R>
+  login: (request: Request) => Promise<R>
 
   /**
    * Convert an authorization server renew {@link Request} to a client promise that will perform it.
    *
    * @param request
    */
-  renew (request: Request): Promise<R>
+  renew: (request: Request) => Promise<R>
 
   /**
    * Convert an authorization server logout {@link Request} to a client promise that will perform it.
    *
    * @param request
    */
-  logout (request: Request): Promise<R>
+  logout: (request: Request) => Promise<R>
 
   /**
    * Convert any resource owner {@link Request} to a client promise that will perform it.
    *
    * @param request
    */
-  request (request: Request): Promise<R>
+  request: (request: Request) => Promise<R>
 
   /**
    * Convert client response to a generic {@link Response}.
    *
    * @param clientResponse
    */
-  asResponse (clientResponse: R): Response
+  asResponse: (clientResponse: R) => Response
 
   /**
    * Setup a request interceptor that intercept all requests on the underlying client to automate
@@ -310,7 +310,7 @@ export interface ClientAdapter<R = any> {
    *
    * @param interceptor
    */
-  setupRequestInterceptor (interceptor: RequestInterceptor): () => void
+  setupRequestInterceptor: (interceptor: RequestInterceptor) => () => void
 
   /**
    * Setup a response interceptor that intercept all responses on the underlying client to automate
@@ -318,7 +318,7 @@ export interface ClientAdapter<R = any> {
    *
    * @param interceptor
    */
-  setupErrorResponseInterceptor (interceptor: ResponseInterceptor): () => void
+  setupErrorResponseInterceptor: (interceptor: ResponseInterceptor) => () => void
 }
 
 /**
@@ -343,7 +343,7 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param serverConfiguration
    * @param credentials
    */
-  asLoginRequest (serverConfiguration: ServerConfiguration, credentials: C): Request
+  asLoginRequest: (serverConfiguration: ServerConfiguration, credentials: C) => Request
 
   /**
    * Build a renew {@link Request}.
@@ -351,7 +351,7 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param serverConfiguration
    * @param tokens
    */
-  asRenewRequest (serverConfiguration: ServerConfiguration, tokens: Tokens<C> | undefined): Request | null
+  asRenewRequest: (serverConfiguration: ServerConfiguration, tokens: Tokens<C> | undefined) => Request | null
 
   /**
    * Build a logout {@link Request}.
@@ -359,7 +359,7 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param serverConfiguration
    * @param tokens
    */
-  asLogoutRequest (serverConfiguration: ServerConfiguration, tokens: Tokens<C> | undefined): Request | null
+  asLogoutRequest: (serverConfiguration: ServerConfiguration, tokens: Tokens<C> | undefined) => Request | null
 
   /**
    * Configure a {@link Request} with given tokens.
@@ -369,14 +369,14 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param request request to configure
    * @param tokens tokens to apply
    */
-  configureRequest (request: Request, tokens: Tokens<C> | undefined): void
+  configureRequest: (request: Request, tokens: Tokens<C> | undefined) => void
 
   /**
    * Read tokens from received {@link Response}.
    *
    * @param response received response
    */
-  getResponseTokens (response: Response): Tokens<C>
+  getResponseTokens: (response: Response) => Tokens<C>
 
   /**
    * Check if user session should renew from {@link Response}.
@@ -384,7 +384,7 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param request initial request that leads to the received response
    * @param response received response
    */
-  shouldRenew (request: Request, response: Response): boolean
+  shouldRenew: (request: Request, response: Response) => boolean
 
   /**
    * Check if user session is expired from {@link Response}.
@@ -392,14 +392,14 @@ export interface ServerAdapter<C = UsernamePasswordCredentials> {
    * @param request initial request that leads to the received response
    * @param response received response
    */
-  isExpired (request: Request, response: Response): boolean
+  isExpired: (request: Request, response: Response) => boolean
 
   /**
    * Should credentials be persisted along with other Tokens.
    *
    * @param serverConfiguration
    */
-  shouldPersistCredentials (serverConfiguration: ServerConfiguration): boolean
+  shouldPersistCredentials: (serverConfiguration: ServerConfiguration) => boolean
 }
 
 /**
@@ -462,9 +462,9 @@ export interface Tokens<C = UsernamePasswordCredentials> {
  * Supports decoding a token and checking if it is expired.
  */
 export interface TokenDecoder {
-  isExpired? (token: Token, offset?: number): boolean
+  isExpired?: (token: Token, offset?: number) => boolean
 
-  decode? (token: Token): any | undefined
+  decode?: (token: Token) => any | undefined
 }
 
 /**
@@ -481,7 +481,7 @@ export interface AuthListener {
    * @param storageLoaded
    * @param err
    */
-  initialized? (storageLoaded?: boolean, err?: any): any
+  initialized?: (storageLoaded?: boolean, err?: any) => any
 
   /**
    * Called when Tokens changes.
@@ -489,27 +489,27 @@ export interface AuthListener {
    * @typeparam C Credentials type
    * @param tokens
    */
-  tokensChanged?<C = UsernamePasswordCredentials> (tokens?: Tokens<C>): any
+  tokensChanged?: <C = UsernamePasswordCredentials>(tokens?: Tokens<C>) => any
 
   /**
    * Called when Tokens is expired.
    */
-  expired? (): any
+  expired?: () => any
 
   /**
    * Called when login has been performed.
    */
-  login? (): any
+  login?: () => any
 
   /**
    * Called when logout has been performed.
    */
-  logout? (): any
+  logout?: () => any
 
   /**
    * Called when Tokens have been renewed.
    */
-  renew? (): any
+  renew?: () => any
 }
 
 /**
@@ -529,19 +529,19 @@ export interface TokenStorage {
    * @typeparam C Credentials type
    * @param tokens
    */
-  store<C> (tokens: Tokens<C>): void
+  store: <C>(tokens: Tokens<C>) => void
 
   /**
    * Remove existing tokens
    */
-  clear (): void
+  clear: () => void
 
   /**
    * Load tokens
    *
    * @typeparam C Credentials type
    */
-  getTokens<C> (): Tokens<C> | undefined
+  getTokens: <C>() => Tokens<C> | undefined
 }
 
 /**
@@ -558,19 +558,19 @@ export interface TokenStorageAsync {
    * @typeparam C Credentials type
    * @param tokens
    */
-  store<C> (tokens: Tokens<C>): Promise<void>
+  store: <C>(tokens: Tokens<C>) => Promise<void>
 
   /**
    * Remove existing tokens
    */
-  clear (): Promise<void>
+  clear: () => Promise<void>
 
   /**
    * Load tokens
    *
    * @typeparam C Credentials type
    */
-  getTokens<C> (): Promise<Tokens<C> | undefined>
+  getTokens: <C>() => Promise<Tokens<C> | undefined>
 }
 
 /**

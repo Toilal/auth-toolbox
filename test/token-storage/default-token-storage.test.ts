@@ -111,11 +111,6 @@ describe('Default Token Storage', () => {
     const refreshDate = new Date()
     refreshDate.setSeconds(accessDate.getSeconds() + 1)
 
-    const tokens: Tokens = {
-      access: { value: 'accessTokenValue', expiresAt: accessDate },
-      refresh: { value: 'refreshTokenValue', expiresAt: refreshDate }
-    }
-
     sessionStorage.setItem('auth.accessToken', 'accessTokenValue')
     sessionStorage.setItem('auth.accessToken.expiresAt', 'expiresAt')
     sessionStorage.setItem('auth.refreshToken', 'refreshTokenValue')
@@ -135,11 +130,6 @@ describe('Default Token Storage', () => {
     const accessDate = new Date()
     const refreshDate = new Date()
     refreshDate.setSeconds(accessDate.getSeconds() + 1)
-
-    const tokens: Tokens = {
-      access: { value: 'accessTokenValue', expiresAt: accessDate },
-      refresh: { value: 'refreshTokenValue', expiresAt: refreshDate }
-    }
 
     sessionStorage.setItem('customAccessTokenKey', 'accessTokenValue')
     sessionStorage.setItem('customAccessTokenKey.exp', 'expiresAt')
@@ -175,11 +165,11 @@ describe('Default Token Storage', () => {
     const tokens = tokenStorage.getTokens()
 
     expect(tokens).toBeDefined()
-    if (tokens) {
+    if (tokens != null) {
       expect(tokens.access.value).toBe('accessTokenValue')
       expect(tokens.access.expiresAt).toEqual(accessDate)
       expect(tokens.refresh).toBeDefined()
-      if (tokens.refresh) {
+      if (tokens.refresh != null) {
         expect(tokens.refresh.value).toBe('refreshTokenValue')
         expect(tokens.refresh.expiresAt).toEqual(refreshDate)
       }

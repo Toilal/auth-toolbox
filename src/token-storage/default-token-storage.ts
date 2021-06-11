@@ -10,11 +10,11 @@ import { Tokens, TokenStorage } from '../auth-toolbox'
 export class DefaultTokenStorage implements TokenStorage {
   readonly async: false = false
 
-  private storage: Storage
-  private accessTokenStorageKey: string
-  private refreshTokenStorageKey: string
-  private expiresAtSuffix: string
-  private credentialsTokenStorageKey: string
+  private readonly storage: Storage
+  private readonly accessTokenStorageKey: string
+  private readonly refreshTokenStorageKey: string
+  private readonly expiresAtSuffix: string
+  private readonly credentialsTokenStorageKey: string
 
   constructor (
     storage: Storage,
@@ -33,7 +33,7 @@ export class DefaultTokenStorage implements TokenStorage {
   store<C> (tokens: Tokens<C>): any {
     this.storage.setItem(this.accessTokenStorageKey, tokens.access.value)
 
-    if (tokens.access.expiresAt) {
+    if (tokens.access.expiresAt != null) {
       this.storage.setItem(
         this.accessTokenStorageKey + this.expiresAtSuffix,
         tokens.access.expiresAt.getTime().toString(10)
@@ -42,13 +42,13 @@ export class DefaultTokenStorage implements TokenStorage {
       this.storage.removeItem(this.accessTokenStorageKey + this.expiresAtSuffix)
     }
 
-    if (tokens.refresh) {
+    if (tokens.refresh != null) {
       this.storage.setItem(this.refreshTokenStorageKey, tokens.refresh.value)
     } else {
       this.storage.removeItem(this.refreshTokenStorageKey)
     }
 
-    if (tokens.refresh && tokens.refresh.expiresAt) {
+    if (tokens.refresh?.expiresAt != null) {
       this.storage.setItem(
         this.refreshTokenStorageKey + this.expiresAtSuffix,
         tokens.refresh.expiresAt.getTime().toString(10)
@@ -57,7 +57,7 @@ export class DefaultTokenStorage implements TokenStorage {
       this.storage.removeItem(this.refreshTokenStorageKey + this.expiresAtSuffix)
     }
 
-    if (tokens.credentials) {
+    if (tokens.credentials != null) {
       this.storage.setItem(this.credentialsTokenStorageKey, JSON.stringify(tokens.credentials))
     } else {
       this.storage.removeItem(this.credentialsTokenStorageKey)
@@ -86,8 +86,8 @@ export class DefaultTokenStorage implements TokenStorage {
       ? new Date(parseInt(refreshTokenExpiresAtStr, 10))
       : undefined
 
-    const accessToken = accessTokenStr ? accessTokenStr : undefined
-    const refreshToken = refreshTokenStr ? refreshTokenStr : undefined
+    const accessToken = accessTokenStr || undefined
+    const refreshToken = refreshTokenStr || undefined
     const credentials = credentialsStr ? JSON.parse(credentialsStr) : undefined
 
     if (accessToken) {

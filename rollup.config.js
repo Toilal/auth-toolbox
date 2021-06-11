@@ -1,5 +1,5 @@
 import resolve from 'rollup-plugin-node-resolve'
-import nodePolyfills from 'rollup-plugin-node-polyfills';
+import nodePolyfills from 'rollup-plugin-node-polyfills'
 import commonjs from 'rollup-plugin-commonjs'
 import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
@@ -27,7 +27,7 @@ if (pkg.peerDependencies) {
 const libraryName = 'auth-toolbox'
 
 export default {
-  input: `src/index.ts`,
+  input: 'src/index.ts',
   output: [
     { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true, globals: globals },
     { file: pkg.module, format: 'es', sourcemap: true, globals: globals }
@@ -47,10 +47,10 @@ export default {
     // Allow node_modules resolution, so you can use 'external' to control
     // which external modules to include in the bundle
     // https://github.com/rollup/rollup-plugin-node-resolve#usage
-    resolve({preferBuiltins: true}),
+    resolve({ preferBuiltins: true }),
     // Add node polyfills in bundle
     nodePolyfills(),
     // Resolve source maps to the original source
-    sourceMaps(),
-  ],
+    sourceMaps()
+  ]
 }

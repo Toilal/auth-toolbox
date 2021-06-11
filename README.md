@@ -6,7 +6,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/Toilal/auth-toolbox/badge.svg?branch=master)](https://coveralls.io/github/Toilal/auth-toolbox?branch=master)
 [![devDependencies Status](https://david-dm.org/Toilal/auth-toolbox/dev-status.svg)](https://david-dm.org/Toilal/auth-toolbox?type=dev)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
-[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![GitHub stars](https://img.shields.io/github/stars/Toilal/auth-toolbox.svg?style=social&label=Stars)](https://github.com/Toilal/auth-toolbox)
 
 *The developer toolbox for HTTP Client Authentication.*

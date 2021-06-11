@@ -77,7 +77,7 @@ describe('AxiosAdapter', () => {
     expect(requestSpy).toHaveBeenCalledTimes(1)
     expect(requestSpy).toHaveBeenLastCalledWith({ method: 'POST', url: 'logout', auth })
 
-    return response
+    return await response
   })
 
   it('perform renew request', async () => {

@@ -5,7 +5,7 @@ declare module 'jest-date-mock' {
    * @param ms
    * @default 0
    */
-  export function advanceBy(ms: number): void
+  export function advanceBy (ms: number): void
 
   /**
    * Sets date to a timestamp or Date.
@@ -13,10 +13,10 @@ declare module 'jest-date-mock' {
    * @param ms
    * @default 0
    */
-  export function advanceTo(ms?: number | Date): void
+  export function advanceTo (ms?: number | Date): void
 
   /**
    * Un-mocks the Date class.
    */
-  export function clear(): void
+  export function clear (): void
 }

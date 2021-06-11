@@ -5,7 +5,7 @@ export class TokenStorageAsyncAdapter implements TokenStorageAsync {
 
   readonly sync?: TokenStorage
 
-  private tokenStorage: TokenStorage
+  private readonly tokenStorage: TokenStorage
 
   constructor (tokenStorage: TokenStorage, syncAvailable: boolean = true) {
     this.tokenStorage = tokenStorage
@@ -30,7 +30,7 @@ export class TokenStorageAsyncAdapter implements TokenStorageAsync {
 export function toTokenStorageSync (
   tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
 ): TokenStorage | null | undefined {
-  if (!tokenStorage) {
+  if (tokenStorage == null) {
     return tokenStorage
   }
   if (!tokenStorage.async) {
@@ -42,7 +42,7 @@ export function toTokenStorageSync (
 export function toTokenStorageAsync (
   tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
 ): TokenStorageAsync | null | undefined {
-  if (!tokenStorage) {
+  if (tokenStorage == null) {
     return tokenStorage
   }
   if (tokenStorage.async) {
