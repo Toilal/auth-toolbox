@@ -1,9 +1,9 @@
 import { Token, TokenDecoder } from '../auth-toolbox'
 import { DefaultTokenDecoder } from './default-token-decoder'
-import { decode } from 'jsonwebtoken'
+import decode from 'jwt-decode'
 
 /**
- * {@link TokenDecoder} based on jsonwebtoken package to be used with JWT {@link Token}.
+ * {@link TokenDecoder} based on jwt-decode package to be used with JWT {@link Token}.
  * It check expiration dates from both server response and JWT `exp` claim, and supports decoding
  * of the JWT token.
  *
