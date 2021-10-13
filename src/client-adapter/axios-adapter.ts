@@ -95,7 +95,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     const id = this.axios.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
-        if (error.response != null && error.response != undefined) {
+        if (error.response != null) {
           const request = this.asRequest(error.config)
           const response = this.asResponse(error.response)
 
