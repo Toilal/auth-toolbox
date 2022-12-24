@@ -483,7 +483,7 @@ export interface AuthListener {
    * @param storageLoaded
    * @param err
    */
-  initialized?: (storageLoaded?: boolean, err?: any) => any
+  initialized?: (storageLoaded?: boolean, error?: any) => any
 
   /**
    * Called when Tokens changes.
@@ -583,4 +583,5 @@ export interface UsernamePasswordCredentials {
   password: string
 }
 
+// eslint-disable-next-line unicorn/prefer-export-from
 export default Auth

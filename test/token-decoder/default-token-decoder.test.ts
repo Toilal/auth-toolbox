@@ -4,7 +4,7 @@ import { advanceTo, clear } from 'jest-date-mock'
 
 describe('Default Token Decoder', () => {
   beforeEach(() => {
-    advanceTo(133713371337)
+    advanceTo(133_713_371_337)
   })
 
   afterEach(() => {

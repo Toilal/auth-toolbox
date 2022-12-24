@@ -269,9 +269,9 @@ describe('AxiosAdapter', () => {
     try {
       await axiosAdapter.request({ method: 'GET', url: 'testUrl' })
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow()
     }
 
@@ -286,7 +286,5 @@ describe('AxiosAdapter', () => {
         status: 401
       }
     )
-
-    return null
   })
 })

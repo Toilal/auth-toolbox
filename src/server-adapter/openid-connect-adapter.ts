@@ -7,6 +7,7 @@ import {
   Tokens,
   UsernamePasswordCredentials
 } from '../auth-toolbox'
+// eslint-disable-next-line unicorn/prefer-node-protocol
 import { stringify } from 'querystring'
 
 export interface LoginResponse {
@@ -69,7 +70,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
   }
 
   asLogoutRequest (serverConfiguration: ServerConfiguration, tokens: Tokens | undefined): Request | null {
-    if ((serverConfiguration.logoutEndpoint != null) && (tokens != null) && (tokens.refresh != null)) {
+    if (serverConfiguration.logoutEndpoint && tokens?.refresh) {
       const rawData = {
         refresh_token: tokens.refresh.value
       }
@@ -84,7 +85,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
   }
 
   asRenewRequest (serverConfiguration: ServerConfiguration, tokens: Tokens | undefined): Request | null {
-    if ((serverConfiguration.renewEndpoint != null) && (tokens != null) && (tokens.refresh != null)) {
+    if (serverConfiguration.renewEndpoint && tokens?.refresh) {
       const rawData = {
         grant_type: 'refresh_token',
         refresh_token: tokens.refresh.value
@@ -100,7 +101,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
   }
 
   shouldPersistCredentials (serverConfiguration: ServerConfiguration): boolean {
-    return serverConfiguration.renewEndpoint == null
+    return !serverConfiguration.renewEndpoint
   }
 
   getResponseTokens (response: Response): Tokens {
@@ -134,8 +135,8 @@ export class OpenidConnectAdapter implements ServerAdapter {
   }
 
   configureRequest (request: Request, tokens: Tokens | undefined): void {
-    if ((tokens?.access) != null) {
-      if (request.headers == null) {
+    if (tokens?.access) {
+      if (!request.headers) {
         request.headers = {}
       }
       request.headers.Authorization = 'Bearer ' + tokens.access.value
@@ -144,8 +145,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
 
   shouldRenew (request: Request, response: Response): boolean {
     return (
-      !(request.headers == null) &&
-      !!request.headers.Authorization &&
+      !!request.headers?.Authorization &&
       response.status === 401 &&
       response.data.error === 'invalid_token'
     )
@@ -153,8 +153,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
 
   isExpired (request: Request, response: Response): boolean {
     return (
-      !(request.headers == null) &&
-      !!request.headers.Authorization &&
+      !!request.headers?.Authorization &&
       response.status === 400 &&
       response.data.error === 'invalid_grant'
     )

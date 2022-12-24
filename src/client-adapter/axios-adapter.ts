@@ -20,9 +20,7 @@ import {
  * It should be given to {@link Auth} constructor.
  */
 export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
-  constructor (private readonly axios: AxiosInstance, private readonly config: AxiosRequestConfig = {}) {
-
-  }
+  constructor (private readonly axios: AxiosInstance, private readonly config: AxiosRequestConfig = {}) {}
 
   async login (request: Request): Promise<AxiosResponse> {
     return await this.axios.request({
@@ -58,7 +56,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     }
     if (response.headers) {
       for (const [k, v] of Object.entries(response.headers)) {
-        if (v != null && !(v instanceof AxiosHeaders)) {
+        if (v !== null && v !== undefined && !(v instanceof AxiosHeaders)) {
           if (!r.headers) {
             r.headers = {}
           }
@@ -81,9 +79,9 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     if (request.data) {
       r.data = request.data
     }
-    if (request.headers != null) {
+    if (request.headers) {
       for (const [k, v] of Object.entries(request.headers)) {
-        if (v != null && !(v instanceof AxiosHeaders)) {
+        if (v !== null && v !== undefined && !(v instanceof AxiosHeaders)) {
           if (!r.headers) {
             r.headers = {}
           }
@@ -112,7 +110,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     const id = this.axios.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
-        if (error.response != null && error.config) {
+        if (error.response && error.config) {
           const request = this.asRequest(error.config)
           const response = this.asResponse(error.response)
 

@@ -137,9 +137,9 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const listener: AuthListener = {
-      initialized (loaded, err) {
+      initialized (loaded, error) {
         expect(loaded).toBeTruthy()
-        expect(err).toBeUndefined()
+        expect(error).toBeUndefined()
 
         const token = auth.getTokens()
         expect(token).toBeDefined()
@@ -192,9 +192,9 @@ describe('Auth', () => {
     localStorage.setItem('auth.accessToken', 'accessTokenValue')
 
     const listener: AuthListener = {
-      initialized (loaded, err) {
+      initialized (loaded, error) {
         expect(loaded).toBeFalsy()
-        expect(err).toBeInstanceOf(Error)
+        expect(error).toBeInstanceOf(Error)
 
         done()
       }
@@ -387,8 +387,8 @@ describe('Auth', () => {
     const decodedToken = auth.decodeAccessToken()
     expect(decodedToken).toEqual({
       iss: 'Jwt Toolbox',
-      iat: 133713311,
-      exp: 133713371,
+      iat: 133_713_311,
+      exp: 133_713_371,
       aud: 'jwt-toolbox',
       sub: 'jwt-toolbox'
     })
@@ -463,9 +463,9 @@ describe('Auth', () => {
     try {
       auth.decodeAccessToken()
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow('')
     }
   })
@@ -490,8 +490,6 @@ describe('Auth', () => {
     await auth.logout()
 
     expect(auth.isAuthenticated()).toBeFalsy()
-
-    return null
   })
 
   it('isSaveCredentials is true when localStorage contains token values and loading tokens from storage', () => {
@@ -583,8 +581,6 @@ describe('Auth', () => {
     expect(listener.renew).not.toHaveBeenCalled()
     expect(listener.logout).not.toHaveBeenCalled()
     expect(listener.expired).not.toHaveBeenCalled()
-
-    return null
   })
 
   it('logs in with save credentials defined and renewEndpoint defined', async () => {
@@ -635,8 +631,6 @@ describe('Auth', () => {
       expect(tokens.credentials).toBeUndefined()
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
-
-    return null
   })
 
   it('logs in with save credentials defined and renewEndpoint undefined', async () => {
@@ -687,8 +681,6 @@ describe('Auth', () => {
       expect(tokens.credentials).toBeUndefined()
     }
     expect(localStorage.getItem('auth.credentials')).toBeNull()
-
-    return null
   })
 
   it('logs out with undefined logoutEndpoint', async () => {
@@ -743,8 +735,6 @@ describe('Auth', () => {
     expect(listener.renew).not.toHaveBeenCalled()
     expect(listener.logout).toHaveBeenCalledTimes(1)
     expect(listener.login).not.toHaveBeenLastCalledWith()
-
-    return null
   })
 
   it('logs out with defined logoutEndpoint', async () => {
@@ -801,8 +791,6 @@ describe('Auth', () => {
     expect(listener.renew).not.toHaveBeenCalled()
     expect(listener.logout).toHaveBeenCalledTimes(1)
     expect(listener.login).not.toHaveBeenLastCalledWith()
-
-    return null
   })
 
   it('renews with defined renewEndpoint', async () => {
@@ -858,8 +846,6 @@ describe('Auth', () => {
     expect(listener.renew).toHaveBeenCalledTimes(1)
     expect(listener.logout).not.toHaveBeenCalled()
     expect(listener.expired).not.toHaveBeenCalled()
-
-    return null
   })
 
   it('fails to renew with defined renewEndpoint and missing refresh_token in response', async () => {
@@ -885,13 +871,11 @@ describe('Auth', () => {
     try {
       await auth.renew()
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow('Can\'t renew with the current state.')
     }
-
-    return null
   })
 
   it('renews only once when multiple requests are performed', async () => {
@@ -947,8 +931,6 @@ describe('Auth', () => {
     expect(listener.renew).toHaveBeenCalledTimes(1)
     expect(listener.logout).not.toHaveBeenCalled()
     expect(listener.expired).not.toHaveBeenCalled()
-
-    return null
   })
 
   it('fails to renew only once when multiple requests are performed', async () => {
@@ -995,9 +977,9 @@ describe('Auth', () => {
     try {
       await Promise.all([auth.renew(), auth.renew(), auth.renew()])
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow('')
     }
 
@@ -1007,8 +989,6 @@ describe('Auth', () => {
     expect(listener.tokensChanged).toHaveBeenLastCalledWith()
     expect(listener.logout).not.toHaveBeenCalled()
     expect(listener.expired).toHaveBeenCalledTimes(1)
-
-    return null
   })
 
   it('intercepts with undefined token decoder and expired access token', async () => {
@@ -1067,13 +1047,11 @@ describe('Auth', () => {
 
     try {
       await axiosInstance.get('custom')
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).not.toThrow()
     }
-
-    return null
   })
 
   it('intercepts with expired renew token', async () => {
@@ -1132,13 +1110,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 400.*/)
     }
-
-    return null
   })
 
   it('intercepts with null token decoder and expired access token', async () => {
@@ -1193,13 +1169,11 @@ describe('Auth', () => {
 
     try {
       await axiosInstance.get('custom')
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).not.toThrow()
     }
-
-    return null
   })
 
   it('intercepts with null token decoder and expired access token and expired refresh token', async () => {
@@ -1252,13 +1226,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('intercepts with null token decoder and expired access token and no refresh token', async () => {
@@ -1309,13 +1281,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('intercepts with token decoder and expired access token and no refresh token', async () => {
@@ -1372,13 +1342,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow('Access token is expired')
     }
-
-    return null
   })
 
   it('does not intercept after release', async () => {
@@ -1433,13 +1401,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('does not intercept if clientInterceptors is false', async () => {
@@ -1494,13 +1460,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('does not intercept if matching a string exclude', async () => {
@@ -1555,13 +1519,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('does not intercept if matching a RegExp exclude', async () => {
@@ -1619,13 +1581,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('does not intercept if matching a functional exclude', async () => {
@@ -1680,13 +1640,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('logs in, renew and logs out with undefined TokenStorage and undefined renewEndpoint', async () => {
@@ -1716,9 +1674,9 @@ describe('Auth', () => {
     try {
       await auth.renew()
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(
         'Can\'t renew with the current state.'
       )
@@ -1729,8 +1687,6 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
-
-    return null
   })
 
   it('logs in, renew and logs out with undefined TokenStorage and defined renewEndpoint', async () => {
@@ -1764,8 +1720,6 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
-
-    return null
   })
 
   it('logs in, renew and logs out with async server configuration', async () => {
@@ -1800,8 +1754,6 @@ describe('Auth', () => {
     await auth.login({ username: 'testUsername', password: 'testPassword' })
     await auth.renew()
     await auth.logout()
-
-    return null
   })
 
   it('calls tokensChanged callback after loading of tokenStorage', () => {
@@ -1861,8 +1813,6 @@ describe('Auth', () => {
     })
 
     await auth.logout()
-
-    return null
   })
 
   it('renews with undefined tokens', async () => {
@@ -1889,8 +1839,6 @@ describe('Auth', () => {
     })
 
     await auth.renew()
-
-    return null
   })
 
   it('sends Bearer when accessToken is manually defined (async)', async () => {
@@ -1916,9 +1864,9 @@ describe('Auth', () => {
     await auth.setTokensAsync({ access: { value: 'accessTokenValue' } })
     try {
       await axiosInstance.get('custom')
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).not.toThrow()
     }
 
@@ -1926,13 +1874,11 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
-
-    return null
   })
 
   it('sends Bearer when accessToken is manually defined (sync)', async () => {
@@ -1958,9 +1904,9 @@ describe('Auth', () => {
     auth.setTokens({ access: { value: 'accessTokenValue' } })
     try {
       await axiosInstance.get('custom')
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).not.toThrow()
     }
 
@@ -1968,9 +1914,9 @@ describe('Auth', () => {
     try {
       await axiosInstance.get('custom')
       expect(false).toBeTruthy()
-    } catch (e) {
+    } catch (error) {
       expect(() => {
-        throw e
+        throw error
       }).toThrow(/Request failed with status code 401.*/)
     }
   })

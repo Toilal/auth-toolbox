@@ -19,7 +19,7 @@ describe('Jwt Token Decoder', () => {
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJKd3QgVG9vbGJveCIsImlhdCI6MTMzNzEzMzExLCJleHAiOjEzMzcxMzM2MiwiYXVkIjoiand0LXRvb2xib3giLCJzdWIiOiJqd3QtdG9vbGJveCJ9.feOjEJUK5lS80e9tysEty6c3E15A9xyNl5RcFeBzz5k'
 
   beforeEach(() => {
-    advanceTo(133713371337)
+    advanceTo(133_713_371_337)
   })
 
   afterEach(() => {
@@ -37,8 +37,8 @@ describe('Jwt Token Decoder', () => {
     const decoded = tokenDecoder.decode(token)
     expect(decoded).toEqual({
       iss: 'Jwt Toolbox',
-      iat: 133713311,
-      exp: 133713371,
+      iat: 133_713_311,
+      exp: 133_713_371,
       aud: 'jwt-toolbox',
       sub: 'jwt-toolbox'
     })
@@ -92,7 +92,7 @@ describe('Jwt Token Decoder', () => {
   it('check token not is expired with NaN offset', () => {
     const token: Token = { value: accessTokenExpNowMinus1 }
 
-    const tokenDecoder = new JwtTokenDecoder(NaN)
+    const tokenDecoder = new JwtTokenDecoder(Number.NaN)
 
     const accessTokenExpired = tokenDecoder.isExpired(token)
     expect(accessTokenExpired).toBeFalsy()

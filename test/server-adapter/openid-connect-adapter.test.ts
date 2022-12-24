@@ -40,7 +40,7 @@ describe('Openid Connect Adapter - Discovery', () => {
 
 describe('Openid Connect Adapter', () => {
   beforeEach(() => {
-    advanceTo(133713371337)
+    advanceTo(133_713_371_337)
   })
 
   afterEach(() => {

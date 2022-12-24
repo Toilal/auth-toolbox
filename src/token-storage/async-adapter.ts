@@ -28,9 +28,9 @@ export class TokenStorageAsyncAdapter implements TokenStorageAsync {
 }
 
 export function toTokenStorageSync (
-  tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
+  tokenStorage?: TokenStorage | TokenStorageAsync | null
 ): TokenStorage | null | undefined {
-  if (tokenStorage == null) {
+  if (!tokenStorage) {
     return tokenStorage
   }
   if (!tokenStorage.async) {
@@ -40,9 +40,9 @@ export function toTokenStorageSync (
 }
 
 export function toTokenStorageAsync (
-  tokenStorage: TokenStorage | TokenStorageAsync | null | undefined
+  tokenStorage?: TokenStorage | TokenStorageAsync | null
 ): TokenStorageAsync | null | undefined {
-  if (tokenStorage == null) {
+  if (!tokenStorage) {
     return tokenStorage
   }
   if (tokenStorage.async) {

@@ -43,8 +43,8 @@ describe('toTokenStorageAsync', () => {
   })
 
   it('does nothing when undefined', () => {
-    expect(toTokenStorageAsync(undefined)).toBeUndefined()
-    expect(toTokenStorageAsync(undefined)).toBeUndefined()
+    expect(toTokenStorageAsync()).toBeUndefined()
+    expect(toTokenStorageAsync()).toBeUndefined()
   })
 
   it('does nothing when already async', () => {
@@ -91,8 +91,8 @@ describe('toTokenStorageSync', () => {
   })
 
   it('does nothing when undefined', () => {
-    expect(toTokenStorageSync(undefined)).toBeUndefined()
-    expect(toTokenStorageSync(undefined)).toBeUndefined()
+    expect(toTokenStorageSync()).toBeUndefined()
+    expect(toTokenStorageSync()).toBeUndefined()
   })
 
   it('does nothing when already async', () => {
