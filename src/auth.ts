@@ -317,7 +317,8 @@ export class Auth<C = UsernamePasswordCredentials, R = any> implements IAuth<C, 
     const serverConfiguration = await this.getServerConfiguration()
     const request = this.serverAdapter.asLoginRequest(serverConfiguration, credentials)
     const response = await this.clientAdapter.login(request)
-    const tokens = this.serverAdapter.getResponseTokens(response)
+    const clientResponse = this.clientAdapter.asResponse(response)
+    const tokens = this.serverAdapter.getResponseTokens(clientResponse)
     if (this.usePersistentStorage && this.serverAdapter.shouldPersistCredentials(serverConfiguration)) {
       tokens.credentials = credentials
     }
@@ -371,7 +372,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any> implements IAuth<C, 
         const renewTokenPromise = new Promise<R>((resolve, reject) => {
           this.renewPromises.push({ promise: renewTokenPromise, resolve, reject })
         })
-        return renewTokenPromise
+        return await renewTokenPromise
       }
     }
   }
@@ -538,7 +539,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any> implements IAuth<C, 
 
     let tokens = this.getTokens()
     const isLoginRequest = await this.isLoginRequest(request)
-    if (tokens?.access && !isLoginRequest) {
+    if (((tokens?.access) != null) && !isLoginRequest) {
       if (tokens.refresh != null) {
         const isRenewRequest = await this.isRenewRequest(request)
         if (
@@ -556,7 +557,6 @@ export class Auth<C = UsernamePasswordCredentials, R = any> implements IAuth<C, 
           tokens = this.getTokens()
         }
         this.serverAdapter.configureRequest(request, tokens)
-        return true
       } else {
         this.serverAdapter.configureRequest(request, tokens)
         if (this.accessTokenDecoder?.isExpired?.(tokens.access)) {
@@ -564,6 +564,7 @@ export class Auth<C = UsernamePasswordCredentials, R = any> implements IAuth<C, 
           throw new Error('Access token is expired')
         }
       }
+      return true
     }
     return false
   }

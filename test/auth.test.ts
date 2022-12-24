@@ -1017,7 +1017,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1082,7 +1082,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1147,7 +1147,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1208,7 +1208,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1267,7 +1267,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1324,7 +1324,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1387,7 +1387,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1448,7 +1448,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1509,7 +1509,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1570,7 +1570,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1634,7 +1634,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValueRenew') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValueRenew') {
         return [200]
       } else {
         return [
@@ -1899,7 +1899,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -1941,7 +1941,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -1981,7 +1981,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2011,7 +2011,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2041,7 +2041,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2069,7 +2069,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2095,7 +2095,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2118,7 +2118,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]
@@ -2149,7 +2149,7 @@ describe('Auth', () => {
 
     const axiosMock: MockAdapter = new MockAdapter(axiosInstance)
     axiosMock.onGet('custom').reply(config => {
-      if (config.headers.Authorization === 'Bearer accessTokenValue') {
+      if (config.headers?.Authorization === 'Bearer accessTokenValue') {
         return [200]
       } else {
         return [401]

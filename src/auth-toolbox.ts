@@ -152,7 +152,7 @@ export interface AuthOptions {
   accessTokenDecoder?: TokenDecoder | null
 
   /**
-   * Token storage used to load and store {Tokens} without any persistence.
+   * Token storage used to load and store {@link Tokens} without any persistence.
    *
    * Stored Tokens should not survive a browser restart.
    *
@@ -234,6 +234,8 @@ export type Method =
   | 'unlink'
   | 'UNLINK'
 
+export type HeaderValue = string | string[] | number | boolean | null
+
 /**
  * A simple HTTP request abstraction that aims to be common for any HTTP client.
  *
@@ -241,7 +243,7 @@ export type Method =
  */
 export interface Request extends ServerEndpoint {
   data?: any
-  headers?: { [key: string]: string }
+  headers?: Record<string, HeaderValue>
 }
 
 /**
@@ -251,7 +253,7 @@ export interface Request extends ServerEndpoint {
  */
 export interface Response<D = any> {
   data?: D
-  headers?: { [key: string]: string }
+  headers?: Record<string, HeaderValue>
   status?: number
 }
 

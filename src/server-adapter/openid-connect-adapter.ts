@@ -134,7 +134,7 @@ export class OpenidConnectAdapter implements ServerAdapter {
   }
 
   configureRequest (request: Request, tokens: Tokens | undefined): void {
-    if (tokens?.access) {
+    if ((tokens?.access) != null) {
       if (request.headers == null) {
         request.headers = {}
       }

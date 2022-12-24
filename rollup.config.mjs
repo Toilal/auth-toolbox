@@ -5,8 +5,8 @@ import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
 import typescript from 'rollup-plugin-typescript2'
 import json from 'rollup-plugin-json'
+import pkg from './package.json' assert { type: 'json' }
 
-const pkg = require('./package.json')
 const external = []
 const globals = {}
 
@@ -29,7 +29,13 @@ const libraryName = 'auth-toolbox'
 export default {
   input: 'src/index.ts',
   output: [
-    { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true, globals: globals },
+    {
+      file: pkg.main,
+      name: camelCase(libraryName),
+      format: 'umd',
+      sourcemap: true,
+      globals: globals
+    },
     { file: pkg.module, format: 'es', sourcemap: true, globals: globals }
   ],
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')

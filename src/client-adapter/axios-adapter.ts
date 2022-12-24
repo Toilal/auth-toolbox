@@ -5,7 +5,14 @@ import {
   Response,
   ResponseInterceptor
 } from '../auth-toolbox'
-import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import {
+  AxiosError,
+  AxiosHeaders,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  Method
+} from 'axios'
 
 /**
  * Wraps instance of Axios client into a {@link ClientAdapter} to support automated authentication.
@@ -13,12 +20,8 @@ import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'ax
  * It should be given to {@link Auth} constructor.
  */
 export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
-  private readonly axios: AxiosInstance
-  private readonly config: AxiosRequestConfig
+  constructor (private readonly axios: AxiosInstance, private readonly config: AxiosRequestConfig = {}) {
 
-  constructor (axios: AxiosInstance, config: AxiosRequestConfig = {}) {
-    this.axios = axios
-    this.config = config
   }
 
   async login (request: Request): Promise<AxiosResponse> {
@@ -54,7 +57,14 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
       r.data = response.data
     }
     if (response.headers) {
-      r.headers = response.headers
+      for (const [k, v] of Object.entries(response.headers)) {
+        if (v != null && !(v instanceof AxiosHeaders)) {
+          if (!r.headers) {
+            r.headers = {}
+          }
+          r.headers[k] = v
+        }
+      }
     }
     if (response.status) {
       r.status = response.status
@@ -67,12 +77,19 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     const method = request.method
     if (!url) throw new Error('No url is defined')
     if (!method) throw new Error('No method is defined')
-    const r: Request = { url, method: method }
+    const r: Request = { url, method: method as Method }
     if (request.data) {
       r.data = request.data
     }
-    if (request.headers) {
-      r.headers = request.headers
+    if (request.headers != null) {
+      for (const [k, v] of Object.entries(request.headers)) {
+        if (v != null && !(v instanceof AxiosHeaders)) {
+          if (!r.headers) {
+            r.headers = {}
+          }
+          r.headers[k] = v
+        }
+      }
     }
     return r
   }
@@ -95,7 +112,7 @@ export class AxiosAdapter implements ClientAdapter<AxiosResponse> {
     const id = this.axios.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
-        if (error.response != null) {
+        if (error.response != null && error.config) {
           const request = this.asRequest(error.config)
           const response = this.asResponse(error.response)
 
