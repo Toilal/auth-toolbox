@@ -38,10 +38,19 @@ export async function openidConnectDiscovery<R> (
   client: ClientAdapter<R>,
   issuerUrl: string
 ): Promise<ServerConfiguration> {
-  const clientResponse = await client.request({
-    method: 'GET',
-    url: issuerUrl + '/.well-known/openid-configuration'
-  })
+  let clientResponse: R | null | undefined = null
+  try {
+    clientResponse = await client.request({
+      method: 'GET',
+      url: issuerUrl + '/.well-known/openid-configuration'
+    })
+  } catch (e) {
+    if (clientResponse === undefined) {
+      throw new Error('OpenId Connect Discovery endpoint return an empty response (hint: maybe a network error)')
+    }
+    throw e
+  }
+
   const response = client.asResponse(clientResponse)
   const openidConfiguration: OpenidConfiguration = response.data
   return {
